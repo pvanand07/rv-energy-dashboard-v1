@@ -122,8 +122,25 @@ async def get_weather(
     wx, icon, lbl = _wmo(int(cur["weather_code"]))
     irr_factor = round(max(0.05, min(1.05, 1 - (cur["cloud_cover"] / 100) * 0.92 + 0.05)), 2)
 
+    # Reverse-geocode city name via Nominatim
+    city = "Unknown"
+    try:
+        async with httpx.AsyncClient(timeout=5.0, headers={"Accept-Language": "en"}) as client:
+            geo = await client.get(
+                f"https://nominatim.openstreetmap.org/reverse"
+                f"?lat={lat}&lon={lon}&format=json&zoom=10",
+                headers={"User-Agent": "rv-energy-intelligence/1.0"},
+            )
+            if geo.is_success:
+                addr = geo.json().get("address", {})
+                city = (addr.get("city") or addr.get("town") or addr.get("village")
+                        or addr.get("county") or "Unknown").split(",")[0]
+    except Exception:
+        pass
+
     payload = {
         "lat": lat, "lon": lon,
+        "city":         city,
         "temp_c":       round(cur["temperature_2m"]),
         "cloud_pct":    cur["cloud_cover"],
         "wind_kmh":     round(cur["wind_speed_10m"]),
@@ -147,6 +164,7 @@ async def get_weather(
         icon=icon,
         lbl=lbl,
         irr_factor=irr_factor,
+        city=city,
     )
 
 

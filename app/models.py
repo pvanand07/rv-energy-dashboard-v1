@@ -259,6 +259,7 @@ class WeatherResponse(BaseModel):
     icon:         str
     lbl:          str
     irr_factor:   float
+    city:         str
 
 
 # ─────────────────────────────────────────────────────────────────────────────

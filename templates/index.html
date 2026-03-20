@@ -889,7 +889,7 @@ occupancy_factor = 0.7 + (occupants / 12) × 0.3
         <div class="pillar-body" style="margin-top:10px">
           <strong>Location lookup:</strong> Reverse geocoding via OpenStreetMap Nominatim gives your city name for display.<br><br>
           <strong>Refresh interval:</strong> Weather data refreshes automatically every 10 minutes while the app is open.<br><br>
-          <strong>Privacy:</strong> Coordinates are sent only to Open-Meteo and Nominatim servers. No data is stored or logged by this application.
+          <strong>Privacy:</strong> Coordinates are sent only to this app's backend, which proxies the request to Open-Meteo and Nominatim. No coordinates are sent directly from your browser to third-party servers.
         </div>
       </div>
 
@@ -1118,19 +1118,12 @@ function docNav(btn,sec){
 let LW={temp:null,cloud:null,wind:null,wx:'sunny',irr:1.0,icon:'🌤',city:''};
 async function fetchWx(lat,lon){
   try{
-    const r=await fetch(`/api/weather?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`,{signal:AbortSignal.timeout(10000)});
+    const r=await fetch(`/api/weather?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`,{signal:AbortSignal.timeout(15000)});
     if(!r.ok)throw new Error('wx '+r.status);
     const d=await r.json();
-    LW={temp:d.temp_c,cloud:d.cloud_pct,wind:d.wind_kmh,wx:d.wx,irr:d.irr_factor,icon:d.icon,lbl:d.lbl,city:LW.city};
+    LW={temp:d.temp_c,cloud:d.cloud_pct,wind:d.wind_kmh,wx:d.wx,irr:d.irr_factor,icon:d.icon,lbl:d.lbl,city:d.city||'Unknown'};
     updWxUI();CFG.weather=LW.wx;CFG.temperature_c=LW.temp;CFG.irradiance_factor=LW.irr;callSim();
   }catch(e){console.warn('Wx fetch failed',e);}
-}
-async function fetchCity(lat,lon){
-  try{
-    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10`,{signal:AbortSignal.timeout(5000),headers:{'Accept-Language':'en'}});
-    const d=await r.json();const a=d.address;
-    LW.city=(a.city||a.town||a.village||a.county||'Your Location').split(',')[0];updWxUI();
-  }catch(e){LW.city='Your Location';}
 }
 function updWxUI(){
   const s=(id,v)=>{const e=ID(id);if(e)e.textContent=v;};
@@ -1146,7 +1139,7 @@ function initLoc(){
   if(!navigator.geolocation){ID('wx-badge').textContent='● NO GPS';return;}
   navigator.geolocation.getCurrentPosition(async pos=>{
     const lat=pos.coords.latitude,lon=pos.coords.longitude;
-    await Promise.all([fetchWx(lat,lon),fetchCity(lat,lon)]);
+    await fetchWx(lat,lon);
     setInterval(()=>fetchWx(lat,lon),600000);
   },()=>{ID('wx-badge').textContent='● GPS DENIED';},{timeout:10000,maximumAge:300000});
 }
