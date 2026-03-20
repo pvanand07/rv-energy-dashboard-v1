@@ -7,4 +7,4 @@ router = APIRouter(prefix="/api", tags=["Test"])
 @router.get("/test", summary="Test endpoint")
 async def test():
     """Returns a simple OK response with a timestamp."""
-    return {"status": "ok", "message": "test endpoint working", "version": "v2", "timestamp": datetime.now(timezone.utc).isoformat()}
+    return {"status": "ok", "message": "test endpoint working", "version": "v3", "timestamp": datetime.now(timezone.utc).isoformat()}
