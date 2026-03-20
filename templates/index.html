@@ -1148,12 +1148,27 @@ function initLoc(){
 let APPS=[],curF='all',editId=null,selIc='🔌',selCl='#0A84FF';
 async function loadApps(){const r=await fetch('/api/appliances');APPS=await r.json();renderRows();refreshStats();}
 function filterApps(c,btn){curF=c;document.querySelectorAll('.fp').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderRows();}
+// Returns effective active hours/day for a schedule type — mirrors app_duty() averages in simulation.py
+function schedEffHours(sched,hrs){
+  switch(sched){
+    case '24h':    return 24.0;
+    case 'cycle':  return ((22*3.5+68*0.06)/90)*24; // avg duty multiplier × 24h ≈ 21.6h
+    case 'meal':   return 3*0.14;                    // 3 meals × 8.4 min = 0.42h
+    case 'burst':  return (10/300)*24;               // 10/300 steps ON fraction × 24h = 0.8h
+    case 'morning':return 3*0.60;                    // 06:00–09:00 at 0.60 duty = 1.8h
+    case 'evening':return 5*0.92;                    // 18:00–23:00 at 0.92 duty = 4.6h
+    case 'lights': return 5*0.90+19*0.08;            // evening high + all-day pilot = 6.02h
+    case 'day':    return 10*0.70*0.75+14*0.08;      // 10:00–20:00 + idle (2 occupants) = 6.37h
+    case 'once':   return hrs;                        // single run whose duration = hrs
+    default:       return hrs;
+  }
+}
 function renderRows(){
   const list=curF==='all'?APPS:curF==='custom'?APPS.filter(a=>a.is_custom):APPS.filter(a=>a.cat===curF);
-  const mx=Math.max(...APPS.map(a=>(a.effective_watts/1000)*((a.duty_cycle_pct||100)/100)*a.hrs),.001);
+  const mx=Math.max(...APPS.map(a=>(a.effective_watts/1000)*((a.duty_cycle_pct||100)/100)*schedEffHours(a.sched,a.hrs)),.001);
   ID('tbl-rows').innerHTML=list.map(a=>{
-    const dc=(a.duty_cycle_pct||100)/100,dk=((a.effective_watts||0)/1000*dc*a.hrs).toFixed(2);
-    const bw=Math.min(100,(+dk/mx)*100).toFixed(1),crit=(a.effective_watts||0)>1500;
+    const dc=(a.duty_cycle_pct||100)/100,dk=((a.effective_watts||0)/1000*dc*schedEffHours(a.sched,a.hrs)).toFixed(2);
+    const bw=Math.min(100,(+dk/mx)*100).toFixed(1),crit=(a.effective_watts||0)>1000;
     return`<div class="tr ${a.on?'on':'off'}">
       <div class="anc"><div class="aib" style="background:${a.clr||'#0A84FF'}20">${a.icon||'🔌'}</div><div><div class="an">${a.name}</div><div class="asu">${a.cat} · ${a.sched}</div></div></div>
       <div class="mn" style="color:var(--l2)">${a.voltage_v||'—'}</div>
@@ -1170,9 +1185,9 @@ function renderRows(){
 }
 function refreshStats(){
   const on=APPS.filter(a=>a.on);
-  const tot=on.reduce((s,a)=>{const dc=(a.duty_cycle_pct||100)/100;return s+(a.effective_watts||0)/1000*dc*a.hrs;},0);
+  const tot=on.reduce((s,a)=>{const dc=(a.duty_cycle_pct||100)/100;return s+(a.effective_watts||0)/1000*dc*schedEffHours(a.sched,a.hrs);},0);
   const pk=Math.max(...on.map(a=>(a.effective_watts||0)/1000),0);
-  ID('as-kwh').textContent=tot.toFixed(1);ID('as-crit').textContent=on.filter(a=>(a.effective_watts||0)>1500).length;
+  ID('as-kwh').textContent=tot.toFixed(1);ID('as-crit').textContent=on.filter(a=>(a.effective_watts||0)>1000).length;
   ID('as-on').textContent=on.length;ID('as-pk').textContent=pk.toFixed(2);
 }
 async function togApp(id,on){
