@@ -18,8 +18,10 @@ services:
     ports:
       - "20024:5000"
     volumes:
-      # Persist the SQLite database across container restarts
-      - ./data:/app/data
+      # Mount source so git pull inside the container triggers uvicorn --reload
+      - .:/app
+      # Named volume keeps SQLite data separate from source mount
+      - rv_data:/app/data
     environment:
       DB_PATH: /app/data/rv_energy.db
       HOST: 0.0.0.0
@@ -32,3 +34,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+volumes:
+  rv_data:

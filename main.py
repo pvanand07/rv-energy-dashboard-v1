@@ -59,11 +59,12 @@ from app.routers.health      import router as router_health
 # LOGGING
 # ─────────────────────────────────────────────────────────────────────────────
 logging.basicConfig(
-    level=logging.DEBUG if DEBUG else logging.INFO,
+    level=logging.WARNING,
     format="%(asctime)s  %(levelname)-8s  %(name)s  %(message)s",
     datefmt="%H:%M:%S",
 )
 logger = logging.getLogger("rv_energy")
+logger.setLevel(logging.DEBUG if DEBUG else logging.INFO)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -159,8 +160,8 @@ app.include_router(router_health)      # /api/health
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
-        host=HOST,
-        port=PORT,
-        reload=DEBUG,
-        log_level="debug" if DEBUG else "info",
+        host="localhost",
+        port=8001,
+        reload=True,
+        log_level="debug",
     )

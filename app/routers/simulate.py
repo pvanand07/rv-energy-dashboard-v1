@@ -69,8 +69,7 @@ async def simulate(req: SimulateRequest):
     # Persist asynchronously — don't fail request if DB write fails
     try:
         async with get_db() as db:
-            run_id = await crud.save_simulation_run(db, result, cfg)
-            logger.debug("Simulation run %d persisted (%.1f ms)", run_id, result["ms"])
+            await crud.save_simulation_run(db, result, cfg)
     except Exception as exc:
         logger.warning("Failed to persist simulation run: %s", exc)
 
