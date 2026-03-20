@@ -28,7 +28,7 @@ COPY . .
 RUN mkdir -p data static
 
 # ── Cron job: git pull every minute ──────────────────────────────────────────
-RUN echo '* * * * * echo "[$(date +\%Y-\%m-\%d\ \%H:\%M:\%S)] cron tick" >> /var/log/sync.log 2>&1 && cd /app && git pull origin main >> /var/log/sync.log 2>&1' \
+RUN echo '* * * * * echo "[$(date +\%Y-\%m-\%d\ \%H:\%M:\%S)] cron tick" >> /var/log/sync.log 2>&1 && (HOME=/root git config --global --add safe.directory /app >/dev/null 2>&1 || true) && cd /app && git pull origin main >> /var/log/sync.log 2>&1' \
     | crontab -
 
 # ── Runtime configuration ─────────────────────────────────────────────────────
