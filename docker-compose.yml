@@ -4,10 +4,10 @@ version: "3.9"
 # RV Energy Intelligence — Docker Compose
 #
 # Usage:
-#   docker compose up          # start
-#   docker compose up -d       # start detached
-#   docker compose down        # stop
-#   docker compose logs -f     # follow logs
+#   docker compose up -d            # start detached
+#   docker compose down             # stop
+#   docker compose logs -f          # follow logs
+#   docker compose up --build -d    # rebuild and restart (after git pull)
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
