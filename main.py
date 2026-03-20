@@ -54,6 +54,7 @@ from app.routers.pages       import router_pages
 from app.routers.appliances  import router as router_appliances
 from app.routers.simulate    import router as router_simulate
 from app.routers.health      import router as router_health
+from app.routers.test        import router as router_test
 
 # ─────────────────────────────────────────────────────────────────────────────
 # LOGGING
@@ -152,6 +153,7 @@ app.include_router(router_pages)       # GET /  (HTML)
 app.include_router(router_appliances)  # /api/appliances
 app.include_router(router_simulate)    # /api/simulate + /api/weather + /api/history
 app.include_router(router_health)      # /api/health
+app.include_router(router_test)        # /api/test
 
 
 # ─────────────────────────────────────────────────────────────────────────────
