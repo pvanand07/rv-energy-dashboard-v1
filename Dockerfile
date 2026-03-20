@@ -43,5 +43,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')" || exit 1
 
 # ── Entry point: start cron + uvicorn ────────────────────────────────────────
-RUN chmod +x scripts/start.sh
-CMD ["scripts/start.sh"]
+CMD ["bash", "scripts/start.sh"]
