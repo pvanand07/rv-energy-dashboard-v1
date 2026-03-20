@@ -39,5 +39,5 @@ async def health():
         "version":    APP_VERSION,
         "db_path":    DB_PATH,
         "appliances": n,
-        "sync":       "auto",
+        "sync":       "auto-v2",
     }
