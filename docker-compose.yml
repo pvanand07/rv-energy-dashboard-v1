@@ -16,7 +16,7 @@ services:
     container_name: rv-energy
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "20024:5000"
     volumes:
       # Persist the SQLite database across container restarts
       - ./data:/app/data
