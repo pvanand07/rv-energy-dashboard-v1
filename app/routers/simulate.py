@@ -25,12 +25,30 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter
+import httpx
+from fastapi import APIRouter, HTTPException, Query
 
 from app.database import get_db
-from app.models import SimulateRequest, SimulateResponse, WeatherReading
+from app.models import SimulateRequest, SimulateResponse, WeatherReading, WeatherResponse
 from app import crud
 from app.simulation import run_simulation
+
+# WMO weather code → (category, icon, label)
+_WMO: dict[int, tuple[str, str, str]] = {
+    0:  ("sunny",    "☀️", "Clear"),
+    1:  ("sunny",    "🌤", "Mainly clear"),
+    2:  ("partly",   "⛅", "Partly cloudy"),
+    3:  ("overcast", "☁️", "Overcast"),
+    45: ("overcast", "🌫", "Foggy"),
+    51: ("rainy",    "🌦", "Drizzle"),
+    61: ("rainy",    "🌧", "Light rain"),
+    63: ("rainy",    "🌧", "Moderate rain"),
+    80: ("rainy",    "🌦", "Showers"),
+    95: ("rainy",    "⛈", "Thunderstorm"),
+}
+
+def _wmo(code: int) -> tuple[str, str, str]:
+    return _WMO.get(code) or _WMO.get((code // 10) * 10) or ("sunny", "🌤", "Mixed")
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +92,62 @@ async def simulate(req: SimulateRequest):
         logger.warning("Failed to persist simulation run: %s", exc)
 
     return result
+
+
+@router.get("/weather", response_model=WeatherResponse, summary="Fetch live weather from Open-Meteo")
+async def get_weather(
+    lat: float = Query(..., description="Latitude"),
+    lon: float = Query(..., description="Longitude"),
+):
+    """
+    Backend proxy for Open-Meteo.  Fetches current conditions for the given
+    coordinates, maps the WMO weather code to a simulation category, computes
+    the irradiance factor from cloud cover, logs the reading, and returns the
+    processed result.
+    """
+    url = (
+        f"https://api.open-meteo.com/v1/forecast"
+        f"?latitude={lat:.4f}&longitude={lon:.4f}"
+        f"&current=temperature_2m,weather_code,cloud_cover,wind_speed_10m"
+        f"&timezone=auto&forecast_days=1"
+    )
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            resp = await client.get(url)
+            resp.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail=f"Open-Meteo unavailable: {exc}") from exc
+
+    cur = resp.json()["current"]
+    wx, icon, lbl = _wmo(int(cur["weather_code"]))
+    irr_factor = round(max(0.05, min(1.05, 1 - (cur["cloud_cover"] / 100) * 0.92 + 0.05)), 2)
+
+    payload = {
+        "lat": lat, "lon": lon,
+        "temp_c":       round(cur["temperature_2m"]),
+        "cloud_pct":    cur["cloud_cover"],
+        "wind_kmh":     round(cur["wind_speed_10m"]),
+        "weather_code": int(cur["weather_code"]),
+        "irr_factor":   irr_factor,
+        "wx_label":     lbl,
+        "wx_icon":      icon,
+    }
+    try:
+        async with get_db() as db:
+            await crud.log_weather(db, payload)
+    except Exception as exc:
+        logger.warning("Weather log failed: %s", exc)
+
+    return WeatherResponse(
+        temp_c=payload["temp_c"],
+        cloud_pct=payload["cloud_pct"],
+        wind_kmh=payload["wind_kmh"],
+        weather_code=payload["weather_code"],
+        wx=wx,
+        icon=icon,
+        lbl=lbl,
+        irr_factor=irr_factor,
+    )
 
 
 @router.post("/weather", summary="Log live weather reading")

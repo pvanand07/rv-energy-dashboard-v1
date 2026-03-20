@@ -249,6 +249,18 @@ class WeatherReading(BaseModel):
     wx_icon:      Optional[str]   = None
 
 
+class WeatherResponse(BaseModel):
+    """Response from GET /api/weather — processed Open-Meteo data."""
+    temp_c:       float
+    cloud_pct:    float
+    wind_kmh:     float
+    weather_code: int
+    wx:           str
+    icon:         str
+    lbl:          str
+    irr_factor:   float
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # HEALTH SCHEMA
 # ─────────────────────────────────────────────────────────────────────────────
@@ -258,3 +270,4 @@ class HealthResponse(BaseModel):
     version:    str
     db_path:    str
     appliances: int
+    sync:       str

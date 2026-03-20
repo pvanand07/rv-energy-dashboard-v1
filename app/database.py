@@ -206,7 +206,7 @@ def _default_appliances() -> list[dict]:
         ("Water heater (main)",  "high",   240, 12.50, 1.00,  97, 100, 0.75, True,  "burst",   "🚿","#FF6B6B"),
         ("Water heater (bath)",  "high",   240,  6.25, 1.00,  97, 100, 0.25, False, "burst",   "🛁","#FFD60A"),
         ("Air conditioner",      "high",   240,  9.17, 0.88,  85,  70, 6.00, False, "day",     "🌬️","#5AC8F5"),
-        ("Microwave",           "medium",  120, 10.00, 0.96,  90, 100, 0.17, True,  "burst",   "📡","#FF9F0A"),
+        ("Microwave",           "medium",  120, 10.00, 0.96,  90, 100, 0.17, True,  "meal",    "📡","#FF9F0A"),
         ("Air fryer",           "medium",  120, 12.50, 0.98,  95, 100, 0.33, False, "once",    "🍟","#FF6B6B"),
         ("Coffee machine",      "medium",  120,  9.17, 0.97,  88, 100, 0.25, True,  "morning", "☕","#AC8E68"),
         ("Garbage disposer",    "medium",  120,  4.17, 0.90,  85, 100, 0.01, False, "burst",   "🗑","#636366"),

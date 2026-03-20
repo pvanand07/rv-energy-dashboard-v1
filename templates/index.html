@@ -1115,15 +1115,13 @@ function docNav(btn,sec){
 }
 
 /* ── WEATHER ── */
-const WMO={0:{wx:'sunny',icon:'☀️',lbl:'Clear'},1:{wx:'sunny',icon:'🌤',lbl:'Mainly clear'},2:{wx:'partly',icon:'⛅',lbl:'Partly cloudy'},3:{wx:'overcast',icon:'☁️',lbl:'Overcast'},45:{wx:'overcast',icon:'🌫',lbl:'Foggy'},51:{wx:'rainy',icon:'🌦',lbl:'Drizzle'},61:{wx:'rainy',icon:'🌧',lbl:'Light rain'},63:{wx:'rainy',icon:'🌧',lbl:'Moderate rain'},80:{wx:'rainy',icon:'🌦',lbl:'Showers'},95:{wx:'rainy',icon:'⛈',lbl:'Thunderstorm'}};
-function wmoI(c){return WMO[c]||WMO[Math.floor(c/10)*10]||{wx:'sunny',icon:'🌤',lbl:'Mixed'};}
 let LW={temp:null,cloud:null,wind:null,wx:'sunny',irr:1.0,icon:'🌤',city:''};
 async function fetchWx(lat,lon){
   try{
-    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=temperature_2m,weather_code,cloud_cover,wind_speed_10m&timezone=auto&forecast_days=1`,{signal:AbortSignal.timeout(6000)});
-    const d=await r.json();const c=d.current;
-    const i=wmoI(c.weather_code);const irr=+(1-(c.cloud_cover/100)*0.92+0.05).toFixed(2);
-    LW={temp:Math.round(c.temperature_2m),cloud:c.cloud_cover,wind:Math.round(c.wind_speed_10m),wx:i.wx,irr,icon:i.icon,lbl:i.lbl,city:LW.city};
+    const r=await fetch(`/api/weather?lat=${lat.toFixed(4)}&lon=${lon.toFixed(4)}`,{signal:AbortSignal.timeout(10000)});
+    if(!r.ok)throw new Error('wx '+r.status);
+    const d=await r.json();
+    LW={temp:d.temp_c,cloud:d.cloud_pct,wind:d.wind_kmh,wx:d.wx,irr:d.irr_factor,icon:d.icon,lbl:d.lbl,city:LW.city};
     updWxUI();CFG.weather=LW.wx;CFG.temperature_c=LW.temp;CFG.irradiance_factor=LW.irr;callSim();
   }catch(e){console.warn('Wx fetch failed',e);}
 }

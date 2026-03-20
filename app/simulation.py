@@ -260,6 +260,11 @@ def run_simulation(cfg: dict) -> dict:
     load_arr:  list[float] = []
     soc_arr:   list[float] = []
 
+    # Per-appliance energy accumulator (index → kWh) — used for accurate breakdown
+    app_kwh: list[float] = [0.0] * len(apps)
+
+    kwh_start = kwh  # snapshot initial charge for autonomy + soc_kwh reporting
+
     for s in range(STEPS):
         h  = s * DT_H
 
@@ -268,13 +273,15 @@ def run_simulation(cfg: dict) -> dict:
 
         # Total appliance load this step
         lk = 0.0
-        for a in apps:
+        for i, a in enumerate(apps):
             if not a.get("on", True):
                 continue
             ew   = float(a.get("effective_watts", a.get("watts", 0)))
             dc   = float(a.get("duty_cycle_pct", 100)) / 100.0
             duty = app_duty(a.get("sched", "24h"), s, a.get("hrs", 1), users)
-            lk  += (ew / 1000.0) * duty * dc * em * ld_fac
+            step_kw = (ew / 1000.0) * duty * dc * em * ld_fac
+            lk += step_kw
+            app_kwh[i] += step_kw * DT_H  # accumulate per-appliance energy (kWh)
 
         # Battery state update (energy balance integration)
         kwh = max(0.0, min(max_kwh, kwh + (sk - lk) * DT_H))
@@ -299,8 +306,10 @@ def run_simulation(cfg: dict) -> dict:
     bd   = max(0.0, tl - ts)       # net battery draw kWh (deficit)
     cov  = min(1.0, ts / tl) if tl > 0 else 1.0   # solar coverage ratio
 
-    # Days off-grid = available energy / daily net draw
-    days = (start_soc * bat_cap * 0.95 * bat_temp_f / bd) if bd > 0.01 else 999.0
+    # Days off-grid = initial usable energy / daily net draw
+    # Use kwh_start (already temperature-derated and clamped to max_kwh) — not a
+    # re-derived formula — to avoid double-applying bat_temp_f.
+    days = (kwh_start / bd) if bd > 0.01 else 999.0
     pk   = max(load_arr)                    # peak instantaneous kW
     mn   = min(soc_arr)                     # minimum SOC % seen
     mnh  = next((h for h in range(24) if soc_h[h] == min(soc_h)), 0)
@@ -316,13 +325,14 @@ def run_simulation(cfg: dict) -> dict:
     nn  = round(sn - ln, 3)
 
     # ── Per-appliance energy breakdown ────────────────────────────────────
+    # daily_kwh is taken from app_kwh[] — accumulated in the simulation loop —
+    # so it exactly matches the energy each appliance contributed to tl.
     breakdown: list[dict] = []
-    for a in apps:
+    for i, a in enumerate(apps):
         if not a.get("on", True):
             continue
-        ew  = float(a.get("effective_watts", a.get("watts", 0)))
-        dc  = float(a.get("duty_cycle_pct", 100)) / 100.0
-        dk  = round(ew / 1000.0 * dc * a.get("hrs", 1) * em * ld_fac, 3)
+        ew = float(a.get("effective_watts", a.get("watts", 0)))
+        dk = round(app_kwh[i], 3)  # index matches enumerate() in simulation loop
         breakdown.append({
             "id":             a.get("id", 0),
             "name":           a["name"],
@@ -339,7 +349,7 @@ def run_simulation(cfg: dict) -> dict:
             "hrs":            a.get("hrs", 1),
             "daily_kwh":      dk,
             "share_pct":      round(dk / tl * 100, 1) if tl > 0 else 0.0,
-            "is_critical":    ew > 1500,
+            "is_critical":    ew > 1000,   # aligned with surge-alert threshold
         })
     breakdown.sort(key=lambda x: x["daily_kwh"], reverse=True)
 
@@ -377,8 +387,8 @@ def run_simulation(cfg: dict) -> dict:
 
     # ── Optimisation tips ─────────────────────────────────────────────────
     tips: list[dict] = []
-    dryer = next((a for a in apps if a.get("id") == 4 and a.get("on")), None)
-    ac    = next((a for a in apps if a.get("id") == 7 and a.get("on")), None)
+    dryer = next((a for a in apps if a.get("on") and "dryer" in a.get("name", "").lower()), None)
+    ac    = next((a for a in apps if a.get("on") and "air conditioner" in a.get("name", "").lower()), None)
 
     if dryer:
         tips.append({"gain": "+1.8d",     "msg": "Disable dryer — single largest daily drain"})
@@ -397,7 +407,7 @@ def run_simulation(cfg: dict) -> dict:
 
     return {
         "soc_pct":          sp,
-        "soc_kwh":          round(start_soc * bat_cap * 0.95, 1),
+        "soc_kwh":          round(kwh_start, 1),
         "bat_cap":          bat_cap,
         "bat_temp_factor":  round(bat_temp_f, 2),
         "tte":              "No depletion projected" if days > 99 else f"{dd}d {dh_val}h remaining",
