@@ -1,0 +1,34 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RV Energy Intelligence — Docker Compose
+#
+# Usage:
+#   docker compose up          # start
+#   docker compose up -d       # start detached
+#   docker compose down        # stop
+#   docker compose logs -f     # follow logs
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  rv-energy:
+    build: .
+    container_name: rv-energy
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      # Persist the SQLite database across container restarts
+      - ./data:/app/data
+    environment:
+      DB_PATH: /app/data/rv_energy.db
+      HOST: 0.0.0.0
+      PORT: 5000
+      DEBUG: "false"
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

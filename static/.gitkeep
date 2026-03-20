@@ -1,0 +1,3 @@
+# Static assets directory.
+# CSS/JS are currently inlined in templates/index.html.
+# Add external .css / .js files here when you extract them.

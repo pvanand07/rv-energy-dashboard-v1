@@ -1,0 +1,53 @@
+# ── Python ────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.Python
+pip-wheel-metadata/
+
+# ── Virtual environments ───────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.env.local
+
+# ── Environment secrets ────────────────────────────────────────────────────
+.env
+# NOTE: .env.example is committed — it contains no secrets
+
+# ── Database (runtime artifact — do NOT commit) ────────────────────────────
+data/*.db
+data/*.db-shm
+data/*.db-wal
+# Keep the data directory itself
+!data/.gitkeep
+
+# ── IDE / Editor ──────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Testing ───────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ── Logs ──────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Distribution ──────────────────────────────────────────────────────────
+*.tar.gz
+*.zip

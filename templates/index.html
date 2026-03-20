@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RV Energy Intelligence — Elevatics AI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --f:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif;
+  --fd:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;
+  --fm:'SF Mono','Menlo','Monaco','Courier New',monospace;
+  --bg:#000;--bg1:#0d0d0f;--bg2:#1c1c1e;--bg3:#2c2c2e;--bg4:#3a3a3c;
+  --l1:#ffffff;--l2:rgba(235,235,245,.60);--l3:rgba(235,235,245,.30);--l4:rgba(235,235,245,.12);
+  --sep:rgba(84,84,88,.55);
+  --blue:#0A84FF;--green:#30D158;--orange:#FF9F0A;--red:#FF453A;
+  --teal:#5AC8F5;--purple:#BF5AF2;--yellow:#FFD60A;--pink:#FF375F;
+  --glass:rgba(28,28,30,.72);--gb:rgba(255,255,255,.07);--gh:rgba(255,255,255,.10);
+  --r8:8px;--r12:12px;--r16:16px;--r22:22px;--rp:99px;
+  --sh:0 4px 24px rgba(0,0,0,.55),0 1px 3px rgba(0,0,0,.4);
+  --shs:0 2px 8px rgba(0,0,0,.4);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+html{background:var(--bg);color:var(--l1);font-family:var(--f)}
+body{min-height:100vh}
+
+/* STATUS BAR */
+.sb{height:34px;display:flex;align-items:center;gap:14px;padding:0 20px;
+  background:rgba(0,0,0,.9);border-bottom:1px solid var(--sep);
+  font-size:10px;color:var(--l3);letter-spacing:.3px;font-family:var(--fm)}
+.sd{width:5px;height:5px;border-radius:50%;background:var(--green);flex-shrink:0}
+@keyframes breathe{0%,100%{opacity:.5}50%{opacity:1}}
+.sd{animation:breathe 2.4s ease-in-out infinite}
+.sp{width:1px;height:12px;background:var(--sep);flex-shrink:0}
+.sbg{padding:2px 8px;border-radius:99px;border:1px solid var(--sep);font-size:9px;letter-spacing:.5px}
+.sbg.live{border-color:rgba(48,209,88,.35);color:var(--green)}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:200;height:52px;
+  background:rgba(0,0,0,.8);backdrop-filter:blur(30px) saturate(180%);
+  border-bottom:1px solid var(--sep)}
+.ni{max-width:1440px;margin:0 auto;height:100%;padding:0 20px;
+  display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.bm{width:30px;height:30px;border-radius:8px;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center;
+  background:linear-gradient(150deg,var(--orange) 0%,var(--green) 100%)}
+.bm svg{width:16px;height:16px}
+.bn{font-size:13px;font-weight:600;letter-spacing:.5px}
+.bt{font-size:9px;color:var(--l3);letter-spacing:1px;margin-top:1px}
+.np{display:flex;gap:2px;background:rgba(255,255,255,.05);border-radius:var(--rp);padding:3px}
+.pill{padding:5px 16px;border-radius:var(--rp);font-size:12px;font-weight:500;
+  cursor:pointer;border:none;background:transparent;color:var(--l2);
+  font-family:var(--f);transition:all .2s;white-space:nowrap}
+.pill:hover{color:var(--l1)}
+.pill.active{background:rgba(255,255,255,.12);color:var(--l1);font-weight:600}
+.nr{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.wc{display:flex;align-items:center;gap:7px;padding:6px 12px;
+  background:var(--glass);border:1px solid var(--gb);border-radius:var(--rp)}
+.wci{font-size:14px}.wct{font-family:var(--fm);font-size:13px;font-weight:600}
+.wcl{font-size:9px;color:var(--l3);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sc{display:flex;align-items:center;gap:8px;padding:6px 12px;
+  background:var(--glass);border:1px solid var(--gb);border-radius:var(--rp)}
+.scp{font-family:var(--fm);font-size:14px;font-weight:700}
+.scl{font-size:9px;color:var(--l3)}
+
+/* LAYOUT */
+main{max-width:1440px;margin:0 auto;padding:20px}
+.page{display:none}.page.active{display:block}
+
+/* CARDS */
+.card{background:var(--glass);border:1px solid var(--gb);border-radius:var(--r22);
+  backdrop-filter:blur(20px);padding:20px;box-shadow:var(--sh)}
+.csm{padding:16px 18px}.cxs{padding:12px 16px}
+.clbl{font-size:10px;font-weight:500;color:var(--l3);letter-spacing:1.5px;
+  text-transform:uppercase;margin-bottom:14px}
+
+/* ═══ STABILITY HERO ═══ */
+.si-hero{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;margin-bottom:16px;align-items:start}
+.si-panel{display:flex;flex-direction:column;gap:12px}
+.si-stat{background:var(--glass);border:1px solid var(--gb);border-radius:var(--r16);
+  padding:16px;box-shadow:var(--shs)}
+.si-v{font-family:var(--fm);font-size:26px;font-weight:700;line-height:1;margin-bottom:4px}
+.si-u{font-size:9px;color:var(--l3);margin-bottom:1px;letter-spacing:.5px}
+.si-lbl{font-size:9px;color:var(--l3);letter-spacing:.8px;text-transform:uppercase}
+
+/* GAUGE */
+.gw{display:flex;flex-direction:column;align-items:center;
+  background:var(--glass);border:1px solid var(--gb);border-radius:var(--r22);
+  padding:24px 20px 18px;box-shadow:var(--sh);min-width:280px}
+.gauge-svg{overflow:visible}
+
+/* Pillar breakdown below gauge */
+.pill-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;width:100%}
+.pill-cell{background:rgba(255,255,255,.04);border-radius:10px;padding:10px;text-align:center}
+.pv{font-family:var(--fm);font-size:15px;font-weight:700;line-height:1;margin-bottom:2px}
+.pl{font-size:8px;color:var(--l3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:5px}
+.pb{height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.pbf{height:100%;border-radius:2px;transition:width 1s cubic-bezier(.34,1.56,.64,1)}
+
+/* BATTERY BAR */
+.bt-track{height:7px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden;margin:8px 0}
+.bt-fill{height:100%;border-radius:99px;transition:width 1s cubic-bezier(.34,1,.64,1)}
+
+/* WEATHER STRIP */
+.wx-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px}
+.wx-item{background:var(--glass);border:1px solid var(--gb);border-radius:var(--r16);
+  padding:13px 15px;display:flex;align-items:center;gap:11px;box-shadow:var(--shs)}
+.wx-ico{font-size:22px;flex-shrink:0}
+.wx-val{font-family:var(--fm);font-size:17px;font-weight:700;line-height:1;margin-bottom:2px}
+.wx-lbl{font-size:9px;color:var(--l3);letter-spacing:.8px;text-transform:uppercase}
+
+/* METRICS ROW */
+.mrow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.mc{background:var(--glass);border:1px solid var(--gb);border-radius:var(--r16);
+  padding:16px;text-align:center;box-shadow:var(--shs);position:relative;overflow:hidden}
+.mc::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent)}
+.mv{font-family:var(--fm);font-size:24px;font-weight:700;line-height:1;margin-bottom:3px}
+.mu{font-size:9px;color:var(--l3);margin-bottom:2px;letter-spacing:.4px}
+.ml{font-size:9px;color:var(--l3);letter-spacing:.8px;text-transform:uppercase}
+
+/* CONTENT GRID */
+.cg{display:grid;grid-template-columns:1fr 340px;gap:16px}
+.cl,.cr{display:flex;flex-direction:column;gap:12px}
+
+/* FLOW ANIMATION */
+@keyframes flow{to{stroke-dashoffset:-20}}
+.fl{stroke-dasharray:6 5;animation:flow .9s linear infinite}
+.flr{stroke-dasharray:6 5;animation:flow .9s linear infinite reverse}
+@keyframes halo{0%,100%{opacity:.3}50%{opacity:.7}}
+.halo{animation:halo 2.4s ease-in-out infinite}
+.pfsv{width:100%;display:block;overflow:visible}
+
+/* ALERTS */
+.ai{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;
+  border-radius:var(--r12);margin-bottom:8px;font-size:12px;line-height:1.5}
+.ad{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.ai.info    {background:rgba(10,132,255,.08);border:1px solid rgba(10,132,255,.2); color:#5AC8F5}
+.ai.warning {background:rgba(255,159,10,.08);border:1px solid rgba(255,159,10,.25);color:#FF9F0A}
+.ai.critical{background:rgba(255,69,58,.08); border:1px solid rgba(255,69,58,.25); color:#FF453A}
+.ai.info .ad    {background:var(--blue)}
+.ai.warning .ad {background:var(--orange)}
+.ai.critical .ad{background:var(--red)}
+.ti{display:flex;align-items:center;gap:10px;padding:9px 13px;
+  background:rgba(48,209,88,.05);border:1px solid rgba(48,209,88,.15);
+  border-radius:var(--r12);margin-bottom:7px}
+.tg{font-family:var(--fm);font-size:10px;color:var(--green);min-width:52px;font-weight:600}
+.tm{font-size:11px;color:var(--l2)}
+
+/* ═══ APPLIANCE TABLE ═══ */
+.atb{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap}
+.pr{display:flex;gap:6px;flex-wrap:wrap}
+.fp{padding:6px 14px;border-radius:var(--rp);font-size:11px;border:1px solid var(--sep);
+  background:transparent;color:var(--l2);cursor:pointer;font-family:var(--f);transition:all .18s}
+.fp.active{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:var(--l1)}
+.ab{padding:8px 20px;border-radius:var(--rp);background:var(--blue);border:none;
+  color:#fff;font-size:12px;font-weight:600;font-family:var(--f);cursor:pointer;
+  display:flex;align-items:center;gap:6px;transition:opacity .18s}
+.ab:hover{opacity:.85}
+.asg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.as{background:var(--glass);border:1px solid var(--gb);border-radius:var(--r16);padding:14px;text-align:center;box-shadow:var(--shs)}
+.asv{font-family:var(--fm);font-size:20px;font-weight:700;line-height:1;margin-bottom:4px}
+.asl{font-size:9px;color:var(--l3);letter-spacing:.8px;text-transform:uppercase}
+.tw{background:var(--glass);border:1px solid var(--gb);border-radius:var(--r22);overflow:hidden;box-shadow:var(--sh)}
+.th{display:grid;grid-template-columns:2.2fr 68px 66px 62px 66px 66px 68px 74px 84px 64px;
+  padding:10px 16px;background:rgba(255,255,255,.03);border-bottom:1px solid var(--sep);
+  font-size:9px;color:var(--l3);letter-spacing:1.4px;text-transform:uppercase;gap:2px}
+.tr{display:grid;grid-template-columns:2.2fr 68px 66px 62px 66px 66px 68px 74px 84px 64px;
+  padding:11px 16px;border-top:1px solid rgba(255,255,255,.04);align-items:center;
+  transition:background .15s;gap:2px}
+.tr:hover{background:rgba(255,255,255,.03)}
+.tr.on{border-left:2px solid rgba(10,132,255,.4)}
+.tr.off{opacity:.5;border-left:2px solid transparent}
+.anc{display:flex;align-items:center;gap:10px;min-width:0}
+.aib{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.an{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.asu{font-size:9px;color:var(--l3);margin-top:1px}
+.mn{font-family:var(--fm);font-size:11px;font-weight:600;display:flex;justify-content:flex-end;align-items:center}
+.chip{font-size:9px;padding:2px 8px;border-radius:99px;font-weight:500;white-space:nowrap}
+.cr{background:rgba(255,69,58,.12);color:#FF453A;border:1px solid rgba(255,69,58,.25)}
+.cg2{background:rgba(48,209,88,.1);color:#30D158;border:1px solid rgba(48,209,88,.2)}
+.cp{background:rgba(191,90,242,.12);color:#BF5AF2;border:1px solid rgba(191,90,242,.2)}
+.tw2{position:relative;width:38px;height:20px;flex-shrink:0}
+.tw2 input{opacity:0;width:0;height:0;position:absolute}
+.ttr{position:absolute;inset:0;border-radius:99px;background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.15);cursor:pointer;transition:all .2s}
+.ttr::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;
+  background:rgba(255,255,255,.5);top:2px;left:2px;transition:all .2s}
+.tw2 input:checked+.ttr{background:rgba(10,132,255,.3);border-color:var(--blue)}
+.tw2 input:checked+.ttr::after{transform:translateX(18px);background:var(--blue)}
+.ra{display:flex;align-items:center;gap:4px;justify-content:center}
+.ib{width:26px;height:26px;border-radius:6px;border:1px solid rgba(255,255,255,.1);
+  background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:12px;transition:all .15s;color:var(--l2)}
+.ib:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:var(--l1)}
+.ib.d:hover{background:rgba(255,69,58,.12);border-color:rgba(255,69,58,.3);color:var(--red)}
+.bm2{display:flex;align-items:center;gap:5px;width:100%}
+.bb{flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.bbf{height:100%;border-radius:2px}
+.bp{font-size:9px;color:var(--l3);min-width:26px;text-align:right;font-family:var(--fm)}
+
+/* ═══ MODAL ═══ */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .22s}
+.mo.open{opacity:1;pointer-events:all}
+.mb{width:min(740px,96vw);max-height:92vh;overflow-y:auto;
+  background:#1c1c1e;border:1px solid rgba(255,255,255,.1);border-radius:var(--r22);
+  padding:28px;box-shadow:0 24px 80px rgba(0,0,0,.7);
+  transform:translateY(20px) scale(.96);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.mo.open .mb{transform:translateY(0) scale(1)}
+.mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.mt2{font-family:var(--fd);font-size:15px;font-weight:600;letter-spacing:.3px}
+.mx{width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.08);
+  border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:14px;color:var(--l2);transition:all .15s}
+.mx:hover{background:rgba(255,69,58,.15);color:var(--red)}
+.cb{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px;
+  padding:14px;background:rgba(255,255,255,.03);border-radius:var(--r16);border:1px solid var(--sep)}
+.cc{text-align:center}
+.cv{font-family:var(--fm);font-size:17px;font-weight:700;margin-bottom:2px}
+.cll{font-size:8px;color:var(--l3);letter-spacing:.8px;text-transform:uppercase}
+.fs{font-size:9px;color:var(--l3);letter-spacing:2px;text-transform:uppercase;font-weight:500;
+  padding-bottom:10px;border-bottom:1px solid var(--sep);margin-bottom:14px}
+.fg{margin-bottom:14px}
+.fl2{font-size:10px;color:var(--l3);letter-spacing:1px;text-transform:uppercase;
+  margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.fh{font-size:9px;color:var(--l4);text-transform:none;letter-spacing:0;margin-left:auto}
+.fi{width:100%;padding:10px 13px;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);border-radius:var(--r12);color:var(--l1);
+  font-family:var(--f);font-size:13px;outline:none;transition:border-color .18s}
+.fi:focus{border-color:var(--blue)}
+.fi option{background:#1c1c1e}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.ip{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.io{width:34px;height:34px;border-radius:8px;border:1px solid rgba(255,255,255,.1);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s}
+.io.sel{border-color:var(--blue);background:rgba(10,132,255,.15)}
+.cp2{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.co{width:24px;height:24px;border-radius:6px;cursor:pointer;transition:all .15s;border:2px solid transparent}
+.co.sel{border-color:white;transform:scale(1.2)}
+.dc{display:none;padding:12px 14px;background:rgba(255,69,58,.07);
+  border:1px solid rgba(255,69,58,.25);border-radius:var(--r12);margin-top:10px;font-size:12px;color:#FF453A}
+.dc.show{display:block}
+.mf{display:flex;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--sep)}
+.bp2{flex:1;padding:12px;background:var(--blue);border:none;border-radius:var(--r12);
+  color:#fff;font-size:13px;font-weight:600;font-family:var(--f);cursor:pointer;transition:opacity .15s}
+.bp2:hover{opacity:.85}
+.bs{padding:12px 18px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);
+  border-radius:var(--r12);color:var(--l1);font-size:13px;font-family:var(--f);cursor:pointer;transition:all .15s}
+.bs:hover{background:rgba(255,255,255,.12)}
+.bd2{padding:12px 18px;background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.25);
+  border-radius:var(--r12);color:var(--red);font-size:13px;font-family:var(--f);cursor:pointer;transition:all .15s}
+.bd2:hover{background:rgba(255,69,58,.18)}
+
+/* ═══ SIMULATE ═══ */
+.sct{display:flex;gap:6px;margin-bottom:14px}
+.stb{flex:1;padding:10px;border-radius:var(--r12);font-size:11px;font-weight:500;
+  text-align:center;cursor:pointer;border:1px solid var(--sep);background:transparent;
+  color:var(--l2);font-family:var(--f);transition:all .18s}
+.stb.active{background:rgba(10,132,255,.15);border-color:rgba(10,132,255,.4);color:var(--blue)}
+.ss{background:var(--glass);border:1px solid var(--gb);border-radius:var(--r16);padding:16px;text-align:center;box-shadow:var(--shs)}
+.sv{font-family:var(--fm);font-size:22px;font-weight:700;line-height:1;margin-bottom:4px}
+.sl{font-size:9px;color:var(--l3);letter-spacing:.8px;text-transform:uppercase}
+.bdt{width:100%;border-collapse:collapse}
+.bdt th{font-size:9px;color:var(--l3);letter-spacing:1.2px;text-transform:uppercase;
+  padding:8px 10px;border-bottom:1px solid var(--sep);text-align:left;font-weight:500}
+.bdt td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;vertical-align:middle}
+.bdt tr:last-child td{border-bottom:none}
+.bdr{display:flex;align-items:center;gap:7px}
+.bdb{flex:1;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.bdf{height:100%;border-radius:2px}
+
+/* ═══ SETTINGS ═══ */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.sr2{display:flex;align-items:center;justify-content:space-between;
+  padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.sr2:last-child{border-bottom:none}
+.sl2{font-size:13px}.ss2{font-size:10px;color:var(--l3);margin-top:2px}
+.stp{display:flex;align-items:center;gap:10px}
+.stb2{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);
+  border:none;color:var(--l1);font-size:16px;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;transition:all .15s}
+.stb2:hover{background:rgba(255,255,255,.14)}
+.stv{font-family:var(--fm);font-size:16px;font-weight:600;min-width:22px;text-align:center}
+.seg{display:flex;gap:0;background:rgba(255,255,255,.08);border-radius:8px;padding:2px}
+.segb{flex:1;padding:5px 10px;border-radius:6px;font-size:11px;border:none;
+  background:transparent;color:var(--l2);cursor:pointer;font-family:var(--f);transition:all .15s}
+.segb.active{background:rgba(255,255,255,.15);color:var(--l1)}
+.wxg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.wxc{padding:14px 8px;border-radius:var(--r16);border:1px solid var(--sep);cursor:pointer;
+  text-align:center;background:rgba(255,255,255,.03);transition:all .18s}
+.wxc.active{border-color:rgba(255,159,10,.5);background:rgba(255,159,10,.08)}
+.wxci{font-size:24px;margin-bottom:5px;display:block}
+.wxcn{font-size:10px;color:var(--l2)}.wxcp{font-size:9px;color:var(--l3);margin-top:2px}
+.pg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.pc{padding:14px 10px;border-radius:var(--r16);border:1px solid var(--sep);cursor:pointer;
+  background:rgba(255,255,255,.03);transition:all .18s;text-align:center}
+.pc.active{border-color:rgba(10,132,255,.4);background:rgba(10,132,255,.08)}
+.pci{font-size:22px;margin-bottom:6px;display:block}
+.pcn{font-size:11px;font-weight:600;margin-bottom:2px}.pcd{font-size:9px;color:var(--l3)}
+input[type=range]{width:100%;height:3px;border-radius:2px;background:rgba(255,255,255,.1);
+  outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;margin:8px 0}
+input[type=range]::-webkit-slider-thumb{width:16px;height:16px;border-radius:50%;
+  background:var(--blue);cursor:pointer;-webkit-appearance:none;box-shadow:0 0 0 3px rgba(10,132,255,.2)}
+.rl{display:flex;justify-content:space-between;margin-bottom:2px;font-size:11px}
+.rl span:first-child{color:var(--l2)}.rl span:last-child{font-family:var(--fm);color:var(--blue)}
+.rb{width:100%;padding:14px;background:linear-gradient(135deg,#0A84FF,#0055D4);
+  border:none;border-radius:var(--r16);color:#fff;font-size:14px;font-weight:600;
+  font-family:var(--fd);cursor:pointer;letter-spacing:.3px;margin-top:8px;
+  transition:opacity .18s;box-shadow:0 4px 20px rgba(10,132,255,.3)}
+.rb:hover{opacity:.88}
+
+/* ═══ DOCS PAGE ═══ */
+.doc-hero{background:linear-gradient(135deg,rgba(10,132,255,.12),rgba(48,209,88,.08));
+  border:1px solid rgba(10,132,255,.2);border-radius:var(--r22);padding:28px 32px;margin-bottom:20px}
+.doc-hero-title{font-family:var(--fd);font-size:24px;font-weight:700;margin-bottom:8px}
+.doc-hero-sub{font-size:14px;color:var(--l2);line-height:1.6;max-width:680px}
+.doc-grid{display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start}
+.doc-nav{background:var(--glass);border:1px solid var(--gb);border-radius:var(--r16);
+  padding:8px;position:sticky;top:72px;box-shadow:var(--shs)}
+.doc-nav-item{padding:10px 14px;border-radius:var(--r12);font-size:12px;cursor:pointer;
+  color:var(--l2);transition:all .15s;border:none;background:transparent;
+  width:100%;text-align:left;font-family:var(--f);display:flex;align-items:center;gap:10px}
+.doc-nav-item:hover{background:rgba(255,255,255,.05);color:var(--l1)}
+.doc-nav-item.active{background:rgba(10,132,255,.12);color:var(--blue);font-weight:500}
+.doc-nav-badge{font-size:9px;padding:2px 6px;border-radius:99px;margin-left:auto;font-family:var(--fm)}
+.doc-content{display:flex;flex-direction:column;gap:16px}
+.doc-section{background:var(--glass);border:1px solid var(--gb);border-radius:var(--r22);
+  padding:24px;box-shadow:var(--shs)}
+.doc-section-title{font-family:var(--fd);font-size:17px;font-weight:600;margin-bottom:6px;
+  display:flex;align-items:center;gap:10px}
+.doc-section-sub{font-size:12px;color:var(--l2);margin-bottom:18px;line-height:1.6}
+.formula-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--r12);padding:16px;margin:12px 0;font-family:var(--fm);font-size:12px;
+  color:#5AC8F5;line-height:1.8;overflow-x:auto}
+.formula-box .comment{color:rgba(235,235,245,.35)}
+.pillar-card{border-radius:var(--r16);padding:16px;margin-bottom:10px;border-left:3px solid}
+.pillar-card.p1{background:rgba(10,132,255,.07);border-color:var(--blue)}
+.pillar-card.p2{background:rgba(255,159,10,.07);border-color:var(--orange)}
+.pillar-card.p3{background:rgba(48,209,88,.07);border-color:var(--green)}
+.pillar-card.p4{background:rgba(90,200,245,.07);border-color:var(--teal)}
+.pillar-card.pf{background:rgba(255,69,58,.07);border-color:var(--red)}
+.pillar-title{font-size:13px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.pillar-body{font-size:12px;color:var(--l2);line-height:1.7}
+.grade-table{width:100%;border-collapse:collapse;margin-top:12px}
+.grade-table th{font-size:9px;color:var(--l3);letter-spacing:1.5px;text-transform:uppercase;
+  padding:8px 12px;border-bottom:1px solid var(--sep);text-align:left;font-weight:500}
+.grade-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px}
+.grade-table tr:last-child td{border-bottom:none}
+.grade-badge{font-family:var(--fm);font-size:14px;font-weight:700;width:32px;height:32px;
+  border-radius:8px;display:inline-flex;align-items:center;justify-content:center}
+.sched-table{width:100%;border-collapse:collapse;margin-top:12px}
+.sched-table th{font-size:9px;color:var(--l3);letter-spacing:1.5px;text-transform:uppercase;
+  padding:8px 12px;border-bottom:1px solid var(--sep);text-align:left;font-weight:500}
+.sched-table td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;color:var(--l2)}
+.sched-table tr:last-child td{border-bottom:none}
+.sched-name{font-family:var(--fm);color:var(--blue);font-size:11px}
+.elec-row{display:grid;grid-template-columns:180px 1fr;gap:0;margin-bottom:8px}
+.elec-label{font-family:var(--fm);font-size:11px;color:var(--teal);padding:8px 12px;
+  background:rgba(255,255,255,.03);border-radius:8px 0 0 8px;border:1px solid var(--sep)}
+.elec-desc{font-size:11px;color:var(--l2);padding:8px 12px;line-height:1.5;
+  background:rgba(255,255,255,.02);border-radius:0 8px 8px 0;border:1px solid var(--sep);border-left:none}
+.info-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;
+  font-size:10px;font-weight:500;margin-right:6px;margin-bottom:4px}
+
+/* ═══ MISC ═══ */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.g6{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.mt{margin-top:14px}
+.col-blue{color:var(--blue)}.col-green{color:var(--green)}.col-orange{color:var(--orange)}
+.col-red{color:var(--red)}.col-teal{color:var(--teal)}.col-l2{color:var(--l2)}.col-l3{color:var(--l3)}
+.leg{display:flex;gap:16px;margin-bottom:10px}
+.ld{width:8px;height:8px;border-radius:2px;display:inline-block;margin-right:4px;vertical-align:middle}
+.toast{position:fixed;bottom:24px;right:24px;z-index:900;padding:12px 20px;
+  border-radius:var(--r12);font-size:12px;font-weight:500;
+  background:rgba(44,44,46,.95);border:1px solid rgba(255,255,255,.12);color:var(--l1);
+  transform:translateY(12px);opacity:0;transition:all .3s cubic-bezier(.32,.72,0,1);
+  pointer-events:none;backdrop-filter:blur(20px);box-shadow:var(--sh)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-color:rgba(48,209,88,.3);color:var(--green)}
+.toast.error{border-color:rgba(255,69,58,.3);color:var(--red)}
+@media(max-width:1100px){.si-hero{grid-template-columns:1fr}.si-panel{flex-direction:row}.wx-strip{grid-template-columns:repeat(3,1fr)}.cg{grid-template-columns:1fr}.mrow{grid-template-columns:repeat(2,1fr)}.sg{grid-template-columns:1fr}.g2{grid-template-columns:1fr}.doc-grid{grid-template-columns:1fr}}
+@media(max-width:720px){.wx-strip{grid-template-columns:repeat(2,1fr)}.asg{grid-template-columns:1fr 1fr}.fg3{grid-template-columns:1fr 1fr}.pg{grid-template-columns:1fr 1fr}.g6{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="sb">
+  <div class="sd"></div>
+  <span>ELEVATICS RV ENERGY INTELLIGENCE</span>
+  <div class="sp"></div><span id="st-ms">v2.1 ready</span>
+  <div class="sp"></div><span id="st-clk">--:--:--</span>
+  <div class="sp"></div>
+  <div class="sbg live" id="wx-badge">● ACQUIRING LOCATION</div>
+</div>
+
+<nav><div class="ni">
+  <div class="brand">
+    <div class="bm"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+    <div><div class="bn">Elevatics</div><div class="bt">RV ENERGY INTELLIGENCE</div></div>
+  </div>
+  <div class="np">
+    <button class="pill active" onclick="showPage('dash',this)">Dashboard</button>
+    <button class="pill" onclick="showPage('apps',this)">Appliances</button>
+    <button class="pill" onclick="showPage('sim',this)">Simulate</button>
+    <button class="pill" onclick="showPage('docs',this)">How It Works</button>
+    <button class="pill" onclick="showPage('set',this)">Settings</button>
+  </div>
+  <div class="nr">
+    <div class="wc">
+      <span class="wci" id="nav-wx-icon">—</span>
+      <div><div class="wct" id="nav-temp">—°</div><div class="wcl" id="nav-loc">Locating…</div></div>
+    </div>
+    <div class="sc">
+      <div><div class="scp" id="nav-soc">{{ d.soc_pct }}%</div><div class="scl">BATTERY</div></div>
+    </div>
+  </div>
+</div></nav>
+
+<main>
+
+<!-- ════════════════════════════ DASHBOARD ════════════════════════════ -->
+<div id="p-dash" class="page active">
+
+  <!-- Stability + Battery Hero -->
+  <div class="si-hero">
+
+    <!-- Left: Battery -->
+    <div class="si-panel">
+      <div class="si-stat card">
+        <div class="clbl">State of Charge</div>
+        <div class="si-u">kWh remaining</div>
+        <div class="si-v col-green" id="soc-kwh">{{ d.soc_kwh }}</div>
+        <div class="bt-track"><div class="bt-fill" id="bat-fill" style="width:{{ d.soc_pct }}%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--l3)">
+          <span>0 kWh</span><span id="soc-pct-txt">{{ d.soc_pct }}%</span><span>{{ d.bat_cap }} kWh</span>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--l2)" id="tte-txt">⏱ {{ d.tte }}</div>
+      </div>
+      <div class="si-stat card">
+        <div class="clbl">Real-time Power</div>
+        <div class="si-u">solar generation</div>
+        <div class="si-v col-orange" id="sol-now">{{ d.sol_now }} kW</div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--sep)">
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px">
+            <span class="col-l3">Load</span><span class="col-blue" id="ld-now" style="font-family:var(--fm)">{{ d.ld_now }} kW</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span class="col-l3">Net</span>
+            <span id="net-now" style="font-family:var(--fm);color:{{ '#30D158' if d.net_now>=0 else '#FF453A' }}">{{ '+' if d.net_now>=0 else '' }}{{ d.net_now }} kW</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: Stability Gauge -->
+    <div class="gw">
+      <div class="clbl" style="margin-bottom:10px">Stability Score (0 – 10)</div>
+      <svg class="gauge-svg" id="gauge-svg" viewBox="0 0 260 220" width="260" height="220">
+        <path id="g-bg"   fill="none" stroke-linecap="round"/>
+        <path id="g-fill" fill="none" stroke-linecap="round"/>
+        <!-- tick marks at 0,2,4,6,8,10 -->
+        <g id="g-ticks" fill="rgba(255,255,255,.2)" font-family="SF Mono,Menlo,monospace" font-size="9" text-anchor="middle"></g>
+        <text id="g-num"   x="130" y="128" text-anchor="middle" dominant-baseline="middle"
+          font-family="-apple-system,BlinkMacSystemFont,'SF Pro Display'" font-size="48" font-weight="700" fill="#fff">{{ d.si_score }}</text>
+        <text id="g-grade" x="130" y="158" text-anchor="middle" dominant-baseline="middle"
+          font-family="-apple-system,BlinkMacSystemFont,'SF Pro Text'" font-size="13" font-weight="500" fill="rgba(235,235,245,.55)">Grade {{ d.si_grade }} — {{ d.si_label }}</text>
+        <!-- 0 and 10 labels -->
+        <text x="32"  y="196" text-anchor="middle" fill="rgba(235,235,245,.3)" font-family="SF Mono,Menlo,monospace" font-size="10">0</text>
+        <text x="228" y="196" text-anchor="middle" fill="rgba(235,235,245,.3)" font-family="SF Mono,Menlo,monospace" font-size="10">10</text>
+      </svg>
+
+      <!-- Pillar bars -->
+      <div class="pill-grid">
+        <div class="pill-cell">
+          <div class="pv col-blue" id="p1-v">{{ d.si_pillars.p1 }}</div>
+          <div class="pl">Autonomy / 3.5</div>
+          <div class="pb"><div class="pbf" id="p1-b" style="background:var(--blue);width:{{ ((d.si_pillars.p1/3.5)*100)|round|int }}%"></div></div>
+        </div>
+        <div class="pill-cell">
+          <div class="pv col-orange" id="p2-v">{{ d.si_pillars.p2 }}</div>
+          <div class="pl">Solar / 3.0</div>
+          <div class="pb"><div class="pbf" id="p2-b" style="background:var(--orange);width:{{ ((d.si_pillars.p2/3.0)*100)|round|int }}%"></div></div>
+        </div>
+        <div class="pill-cell">
+          <div class="pv col-green" id="p3-v">{{ d.si_pillars.p3 }}</div>
+          <div class="pl">Safety / 2.0</div>
+          <div class="pb"><div class="pbf" id="p3-b" style="background:var(--green);width:{{ ((d.si_pillars.p3/2.0)*100)|round|int }}%"></div></div>
+        </div>
+        <div class="pill-cell">
+          <div class="pv col-teal" id="p4-v">{{ d.si_pillars.p4 }}</div>
+          <div class="pl">Reserve / 1.5</div>
+          <div class="pb"><div class="pbf" id="p4-b" style="background:var(--teal);width:{{ ((d.si_pillars.p4/1.5)*100)|round|int }}%"></div></div>
+        </div>
+      </div>
+
+      {% if d.si_grade == 'F' %}
+      <div style="margin-top:12px;padding:10px 14px;background:rgba(255,69,58,.1);border:1px solid rgba(255,69,58,.3);border-radius:var(--r12);font-size:11px;color:#FF453A;text-align:center;line-height:1.5">
+        <strong>⚠ Grade F — System cannot sustain itself.</strong><br>Connect shore power or shed load immediately.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Right: Autonomy + Analytics -->
+    <div class="si-panel">
+      <div class="si-stat card">
+        <div class="clbl">Off-Grid Autonomy</div>
+        <div class="si-u">days remaining</div>
+        <div class="si-v" id="days-v" style="color:{{ '#30D158' if d.days_off_grid>3 else '#FF9F0A' if d.days_off_grid>1 else '#FF453A' }}">
+          {{ '∞' if d.days_off_grid > 99 else d.days_off_grid }}
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:12px">
+          <div style="text-align:center;flex:1">
+            <div style="font-family:var(--fm);font-size:14px;font-weight:700;color:var(--orange)">{{ d.total_sol_kwh }}</div>
+            <div style="font-size:9px;color:var(--l3);margin-top:2px">SOLAR kWh</div>
+          </div>
+          <div style="width:1px;background:var(--sep)"></div>
+          <div style="text-align:center;flex:1">
+            <div style="font-family:var(--fm);font-size:14px;font-weight:700;color:var(--blue)" id="lkwh">{{ d.total_load_kwh }}</div>
+            <div style="font-size:9px;color:var(--l3);margin-top:2px">LOAD kWh</div>
+          </div>
+          <div style="width:1px;background:var(--sep)"></div>
+          <div style="text-align:center;flex:1">
+            <div style="font-family:var(--fm);font-size:14px;font-weight:700;color:var(--teal)" id="cov-v">{{ d.sol_coverage_pct }}%</div>
+            <div style="font-size:9px;color:var(--l3);margin-top:2px">COVERED</div>
+          </div>
+        </div>
+      </div>
+      <div class="si-stat card">
+        <div class="clbl">Battery Analytics</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;font-size:11px"><span class="col-l3">Temp capacity factor</span><span class="col-teal" id="bt-f" style="font-family:var(--fm)">{{ (d.bat_temp_factor*100)|round|int }}%</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px"><span class="col-l3">Min SOC (@ {{ d.min_soc_h }}:00)</span><span class="col-l2" id="min-soc" style="font-family:var(--fm)">{{ d.min_soc }}%</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px"><span class="col-l3">Peak load</span><span class="col-l2" id="pk-kw" style="font-family:var(--fm)">{{ d.peak_load_kw }} kW</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px"><span class="col-l3">Net battery draw</span><span class="col-l2" id="bat-d" style="font-family:var(--fm)">{{ d.bat_draw_kwh }} kWh</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px"><span class="col-l3">Ambient temperature</span><span class="col-l2" id="cfg-temp" style="font-family:var(--fm)">{{ d.temperature_c }}°C</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weather Strip -->
+  <div class="wx-strip">
+    <div class="wx-item"><div class="wx-ico" id="wx-ico">🌡</div><div><div class="wx-val" id="wx-temp">—°C</div><div class="wx-lbl">Temperature</div></div></div>
+    <div class="wx-item"><div class="wx-ico">☁️</div><div><div class="wx-val" id="wx-cloud">—%</div><div class="wx-lbl">Cloud Cover</div></div></div>
+    <div class="wx-item"><div class="wx-ico">💨</div><div><div class="wx-val" id="wx-wind">— km/h</div><div class="wx-lbl">Wind Speed</div></div></div>
+    <div class="wx-item"><div class="wx-ico">☀️</div><div><div class="wx-val" id="wx-irr">—×</div><div class="wx-lbl">Irr. Factor</div></div></div>
+    <div class="wx-item"><div class="wx-ico">📍</div><div><div class="wx-val" style="font-size:12px" id="wx-city">Locating…</div><div class="wx-lbl" id="wx-upd">Real-time weather</div></div></div>
+  </div>
+
+  <!-- Metric cards -->
+  <div class="mrow">
+    <div class="mc"><div class="mu">kW</div><div class="mv col-orange" id="m-sol">{{ d.sol_now }}</div><div class="ml">Solar now</div></div>
+    <div class="mc"><div class="mu">kW</div><div class="mv col-blue" id="m-ld">{{ d.ld_now }}</div><div class="ml">Load now</div></div>
+    <div class="mc"><div class="mu">net kW</div><div class="mv" id="m-net">{{ '+' if d.net_now>=0 else '' }}{{ d.net_now }}</div><div class="ml" id="m-net-l">{{ 'Charging' if d.net_now>=0 else 'Drawing' }}</div></div>
+    <div class="mc"><div class="mu">/ 10</div><div class="mv" id="m-si">{{ d.si_score }}</div><div class="ml">Stability Score</div></div>
+  </div>
+
+  <!-- Charts + Sidebar -->
+  <div class="cg">
+    <div class="cl">
+      <div class="card"><div class="clbl">24-Hour Power Profile</div>
+        <div class="leg"><div class="ld" style="background:var(--orange)"></div><span style="font-size:10px;color:var(--l2)">Solar &nbsp;</span><div class="ld" style="background:var(--blue)"></div><span style="font-size:10px;color:var(--l2)">Load</span></div>
+        <div style="height:165px"><canvas id="pw-c"></canvas></div></div>
+      <div class="card"><div class="clbl">Battery SOC Prediction (24h)</div>
+        <div style="height:115px"><canvas id="soc-c"></canvas></div></div>
+      <div class="card"><div class="clbl">Net Power Balance · Solar − Load</div>
+        <div style="height:95px"><canvas id="net-c"></canvas></div></div>
+    </div>
+    <div class="cr">
+      <div class="card csm"><div class="clbl">System Alerts</div><div id="alerts-w">
+        {% for a in d.alerts %}<div class="ai {{ a.sev }}"><div class="ad"></div><span>{{ a.msg }}</span></div>{% endfor %}
+      </div></div>
+      <div class="card csm"><div class="clbl">Optimization Recommendations</div>
+        {% for t in d.tips %}<div class="ti"><span class="tg">{{ t.gain }}</span><span class="tm">{{ t.msg }}</span></div>{% endfor %}
+      </div>
+      <div class="card cxs"><div class="clbl">Active Config</div>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:11px">
+          <div style="display:flex;justify-content:space-between"><span class="col-l3">Scenario</span><span style="text-transform:capitalize" id="cfg-sc">{{ d.scenario }}</span></div>
+          <div style="display:flex;justify-content:space-between"><span class="col-l3">Weather</span><span id="cfg-wx">{{ d.weather }}</span></div>
+          <div style="display:flex;justify-content:space-between"><span class="col-l3">Occupants</span><span id="cfg-occ">{{ d.occupants }}</span></div>
+          <div style="display:flex;justify-content:space-between"><span class="col-l3">Experience</span><span>{{ d.experience }}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div><!-- /dash -->
+
+<!-- ════════════════════════════ APPLIANCES ════════════════════════════ -->
+<div id="p-apps" class="page">
+  <div class="atb">
+    <div class="pr">
+      <button class="fp active" onclick="filterApps('all',this)">All</button>
+      <button class="fp" onclick="filterApps('high',this)">⚡ High power</button>
+      <button class="fp" onclick="filterApps('medium',this)">🔶 Medium</button>
+      <button class="fp" onclick="filterApps('low',this)">🔵 Always on</button>
+      <button class="fp" onclick="filterApps('custom',this)">✨ Custom</button>
+    </div>
+    <button class="ab" onclick="openModal()">＋ Add Appliance</button>
+  </div>
+  <div class="asg">
+    <div class="as"><div class="asv col-blue" id="as-kwh">—</div><div class="asl">Daily load kWh</div></div>
+    <div class="as"><div class="asv col-red" id="as-crit">—</div><div class="asl">Critical loads</div></div>
+    <div class="as"><div class="asv col-green" id="as-on">—</div><div class="asl">Active devices</div></div>
+    <div class="as"><div class="asv col-orange" id="as-pk">—</div><div class="asl">Peak draw kW</div></div>
+  </div>
+  <div class="tw">
+    <div class="th">
+      <span>Appliance</span>
+      <span style="justify-content:flex-end">Volt V</span>
+      <span style="justify-content:flex-end">Curr A</span>
+      <span style="justify-content:flex-end">PF</span>
+      <span style="justify-content:flex-end">Eff %</span>
+      <span style="justify-content:flex-end">Duty %</span>
+      <span style="justify-content:flex-end">Real W</span>
+      <span>kWh/day</span>
+      <span>Status</span>
+      <span style="justify-content:center">Actions</span>
+    </div>
+    <div id="tbl-rows"></div>
+  </div>
+</div><!-- /apps -->
+
+<!-- ════════════════════════════ SIMULATE ════════════════════════════ -->
+<div id="p-sim" class="page">
+  <div class="sct">
+    <button class="stb active" onclick="simSc('expected',this)">Expected</button>
+    <button class="stb" onclick="simSc('best',this)">Best case</button>
+    <button class="stb" onclick="simSc('worst',this)">Worst case</button>
+  </div>
+  <div class="g6" style="margin-bottom:14px">
+    <div class="ss"><div class="sv col-blue" id="ss-load">{{ d.total_load_kwh }}</div><div class="sl">Load kWh/day</div></div>
+    <div class="ss"><div class="sv col-orange" id="ss-sol">{{ d.total_sol_kwh }}</div><div class="sl">Solar kWh</div></div>
+    <div class="ss"><div class="sv col-teal" id="ss-bat">{{ d.bat_draw_kwh }}</div><div class="sl">Battery draw</div></div>
+    <div class="ss"><div class="sv" id="ss-days">{{ '∞' if d.days_off_grid>99 else d.days_off_grid }}</div><div class="sl">Days off-grid</div></div>
+    <div class="ss"><div class="sv" id="ss-si">{{ d.si_score }}</div><div class="sl">Stability / 10</div></div>
+    <div class="ss"><div class="sv col-orange" id="ss-cov">{{ d.sol_coverage_pct }}%</div><div class="sl">Solar coverage</div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="clbl">24-Hour Power Profile</div>
+      <div class="leg"><div class="ld" style="background:var(--orange)"></div><span style="font-size:10px;color:var(--l2)">Solar &nbsp;</span><div class="ld" style="background:var(--blue)"></div><span style="font-size:10px;color:var(--l2)">Load</span></div>
+      <div style="height:175px"><canvas id="sim-pw"></canvas></div></div>
+    <div class="card"><div class="clbl">Battery SOC Curve</div>
+      <div style="height:175px"><canvas id="sim-soc"></canvas></div></div>
+  </div>
+  <div class="g2 mt">
+    <div class="card"><div class="clbl">What-If Simulator</div>
+      <div style="margin-bottom:14px">
+        <div class="rl"><span>Solar intensity</span><span id="wi-sl">100%</span></div>
+        <input type="range" min="0" max="100" value="100" id="wi-s" oninput="wiUpd()">
+      </div>
+      <div>
+        <div class="rl"><span>Load factor</span><span id="wi-ll">100%</span></div>
+        <input type="range" min="40" max="200" value="100" id="wi-l" oninput="wiUpd()">
+      </div>
+    </div>
+    <div class="card"><div class="clbl">Appliance Breakdown (Top 8)</div>
+      <table class="bdt"><thead><tr>
+        <th>Appliance</th><th style="text-align:right">Eff W</th><th style="text-align:right">kWh/d</th><th>Share</th>
+      </tr></thead><tbody id="bd-body">
+        {% for a in d.breakdown[:8] %}<tr>
+          <td>{{ a.icon }} {{ a.name }}</td>
+          <td style="text-align:right;font-family:var(--fm);font-size:11px;color:{{ a.clr }}">{{ a.effective_watts|round|int }}</td>
+          <td style="text-align:right;font-family:var(--fm);font-size:11px">{{ a.daily_kwh }}</td>
+          <td><div class="bdr"><div class="bdb"><div class="bdf" style="width:{{ [a.share_pct,100]|min }}%;background:{{ a.clr }}"></div></div><span style="font-size:9px;color:var(--l3);min-width:28px;text-align:right;font-family:var(--fm)">{{ a.share_pct }}%</span></div></td>
+        </tr>{% endfor %}
+      </tbody></table>
+    </div>
+  </div>
+</div><!-- /sim -->
+
+<!-- ════════════════════════════ HOW IT WORKS (DOCS) ════════════════════════════ -->
+<div id="p-docs" class="page">
+  <div class="doc-hero">
+    <div class="doc-hero-title">📖 How RV Energy Intelligence Works</div>
+    <div class="doc-hero-sub">Every number you see on the dashboard is calculated from first principles — electrical engineering, battery chemistry, and solar physics. This page explains every formula, every constant, and what each score means for your trip.</div>
+  </div>
+  <div class="doc-grid">
+    <!-- Left nav -->
+    <div class="doc-nav">
+      <button class="doc-nav-item active" onclick="docNav(this,'doc-si')">⚡ Stability Score<span class="doc-nav-badge" style="background:rgba(255,69,58,.15);color:#FF453A">0–10</span></button>
+      <button class="doc-nav-item" onclick="docNav(this,'doc-elec')">🔌 Electrical Model<span class="doc-nav-badge" style="background:rgba(10,132,255,.15);color:var(--blue)">V·A·PF</span></button>
+      <button class="doc-nav-item" onclick="docNav(this,'doc-solar')">☀️ Solar Engine<span class="doc-nav-badge" style="background:rgba(255,159,10,.15);color:var(--orange)">kWh</span></button>
+      <button class="doc-nav-item" onclick="docNav(this,'doc-bat')">🔋 Battery Model<span class="doc-nav-badge" style="background:rgba(48,209,88,.15);color:var(--green)">LiFePO4</span></button>
+      <button class="doc-nav-item" onclick="docNav(this,'doc-sched')">🕐 Schedules<span class="doc-nav-badge" style="background:rgba(90,200,245,.15);color:var(--teal)">9 types</span></button>
+      <button class="doc-nav-item" onclick="docNav(this,'doc-wx')">🌤 Weather Integration<span class="doc-nav-badge" style="background:rgba(191,90,242,.15);color:var(--purple)">Live</span></button>
+      <button class="doc-nav-item" onclick="docNav(this,'doc-grades')">🏅 Grade Reference</button>
+    </div>
+
+    <!-- Right content -->
+    <div class="doc-content">
+
+      <!-- ── STABILITY SCORE ── -->
+      <div class="doc-section" id="doc-si">
+        <div class="doc-section-title">⚡ Stability Score — 0 to 10</div>
+        <div class="doc-section-sub">A single composite number that answers "How healthy is my energy system right now?" Higher is always better. 0 = system failure. 10 = fully self-sufficient off-grid paradise.</div>
+
+        <div class="formula-box">
+Stability Score = Pillar₁ + Pillar₂ + Pillar₃ + Pillar₄
+
+<span class="comment">Where:</span>
+  Pillar₁  Energy Autonomy       0 – 3.5 pts   weight 35%
+  Pillar₂  Solar Self-Sufficiency 0 – 3.0 pts   weight 30%
+  Pillar₃  Peak Safety Margin    0 – 2.0 pts   weight 20%
+  Pillar₄  Battery Reserve Floor  0 – 1.5 pts   weight 15%
+  ─────────────────────────────────────────────────────────
+  Total                           0 – 10.0 pts</div>
+
+        <div class="pillar-card p1">
+          <div class="pillar-title"><span style="font-family:var(--fm);color:var(--blue)">[P1]</span> Energy Autonomy — max 3.5 pts</div>
+          <div class="pillar-body">
+            <strong>Question:</strong> How many days can you survive without any external power?<br><br>
+            <code style="font-family:var(--fm);color:var(--teal);font-size:11px">P1 = min(3.5, (days_off_grid / 14) × 3.5)</code><br><br>
+            The reference benchmark is <strong>14 days</strong> — the gold standard for serious boondocking (e.g. BLM land in the American Southwest). At 14 days you earn the full 3.5 points. At 7 days you earn 1.75. At 2 days you earn 0.5.<br><br>
+            <em>days_off_grid = (start_SOC × usable_capacity) / net_battery_draw_kWh_per_day</em>
+          </div>
+        </div>
+
+        <div class="pillar-card p2">
+          <div class="pillar-title"><span style="font-family:var(--fm);color:var(--orange)">[P2]</span> Solar Self-Sufficiency — max 3.0 pts</div>
+          <div class="pillar-body">
+            <strong>Question:</strong> Is the sun covering your daily energy needs?<br><br>
+            <code style="font-family:var(--fm);color:var(--teal);font-size:11px">P2 = min(3.0, solar_coverage_ratio × 3.0)</code><br>
+            <code style="font-family:var(--fm);color:var(--teal);font-size:11px">solar_coverage_ratio = total_solar_kWh / total_load_kWh  (capped at 1.0)</code><br><br>
+            100% solar means zero net battery drain — you're living completely off the panels. At 60% you earn 1.8 pts. At 20% you earn 0.6 pts (all energy from battery). Real-time cloud cover from Open-Meteo reduces this score by shrinking the irradiance factor.
+          </div>
+        </div>
+
+        <div class="pillar-card p3">
+          <div class="pillar-title"><span style="font-family:var(--fm);color:var(--green)">[P3]</span> Peak Safety Margin — max 2.0 pts</div>
+          <div class="pillar-body">
+            <strong>Question:</strong> Am I about to trip my inverter?<br><br>
+            <code style="font-family:var(--fm);color:var(--teal);font-size:11px">P3 = min(2.0, max(0, (1 − peak_kW / 5.0)) × 2.0)</code><br><br>
+            The reference inverter limit is <strong>5 kW</strong> (typical RV pure-sine inverter). If your peak simultaneous load approaches or exceeds 5 kW, you risk circuit trips, inverter shutdown, or blown fuses. At 0 kW peak (idle) you earn 2.0 pts. At 2.5 kW (50% load) you earn 1.0 pts. At 5 kW or above you earn 0 pts — you're in the danger zone. Running stove + AC + water heater simultaneously is a common cause of P3=0.
+          </div>
+        </div>
+
+        <div class="pillar-card p4">
+          <div class="pillar-title"><span style="font-family:var(--fm);color:var(--teal)">[P4]</span> Battery Reserve Floor — max 1.5 pts</div>
+          <div class="pillar-body">
+            <strong>Question:</strong> Does the battery stay above the safe minimum all day?<br><br>
+            <code style="font-family:var(--fm);color:var(--teal);font-size:11px">P4 = min(1.5, max(0, (min_SOC% − 20%) / 80%) × 1.5)</code><br><br>
+            For LiFePO4 chemistry, discharging below <strong>20% SOC</strong> causes irreversible cell damage and premature aging. P4 measures how far above that floor the <em>daily minimum</em> SOC stays. If the battery never drops below 60%, P4 = min(1.5, 40/80 × 1.5) = 0.75 pts. If it hits exactly 20%, P4 = 0. If it goes below 20%, P4 = 0 and an alert fires. The simulation tracks SOC at every 30-second step to find the true minimum.
+          </div>
+        </div>
+
+        <div class="pillar-card pf">
+          <div class="pillar-title"><span style="font-family:var(--fm);color:var(--red)">⚠ GRADE F — What does it mean?</span></div>
+          <div class="pillar-body">
+            Grade F (Score &lt; 5.0) means <strong>the system cannot sustain itself.</strong> At least one catastrophic condition exists:<br><br>
+            <strong>1. Imminent battery depletion</strong> — days_off_grid &lt; ~2.4 → P1 &lt; 0.6 pts<br>
+            The battery will be exhausted in &lt; 2 days. Immediate shore power or load shed required.<br><br>
+            <strong>2. Solar blackout</strong> — coverage &lt; ~33% → P2 &lt; 1.0 pt<br>
+            Panels generate less than a third of demand. Happens in multi-day overcast, insufficient capacity, or shading.<br><br>
+            <strong>3. Inverter overload</strong> — peak_kW &gt; ~2.5 kW → P3 &lt; 1.0 pt<br>
+            Multiple large loads running simultaneously push close to or past the inverter limit.<br><br>
+            <strong>4. Reserve violation</strong> — min_SOC &lt; ~53% → P4 &lt; 0.49 pts<br>
+            The battery dips below a safe daily low, compressing long-term battery life.<br><br>
+            A combined F (multiple pillars near zero) is the most dangerous scenario. Example: 2 kWh/day solar against 13 kWh/day load with AC + water heater running simultaneously scores approximately <strong>2.0 / 10</strong> — a deep F that demands immediate intervention.
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ELECTRICAL MODEL ── -->
+      <div class="doc-section" id="doc-elec" style="display:none">
+        <div class="doc-section-title">🔌 Electrical Model — How Appliance Power is Calculated</div>
+        <div class="doc-section-sub">Every appliance draws power through a three-stage chain: apparent → real → effective (battery load). Each stage has a real-world loss.</div>
+        <div class="formula-box">
+<span class="comment">Stage 1 — Apparent power (what flows through the wire)</span>
+apparent_VA = voltage_V × current_A
+
+<span class="comment">Stage 2 — Real power (actual work done, after reactive losses)</span>
+real_W = apparent_VA × power_factor
+
+<span class="comment">Stage 3 — Effective power (what the battery must supply, after inverter/device losses)</span>
+effective_W = real_W / (efficiency_pct / 100)
+
+<span class="comment">Stage 4 — Daily energy (accounting for duty cycle and active hours)</span>
+daily_kWh = (effective_W / 1000) × (duty_cycle_pct / 100) × hrs_per_day</div>
+
+        <div class="elec-row"><div class="elec-label">voltage_V</div><div class="elec-desc">Supply voltage in volts. Common RV values: 12V (DC accessories), 48V (Starlink), 120V (standard AC), 240V (large appliances). Higher voltage means lower current for the same power — critical for wire sizing.</div></div>
+        <div class="elec-row"><div class="elec-label">current_A</div><div class="elec-desc">Rated current draw in amperes. This is the nameplate value from the appliance label. Together with voltage, it defines apparent power: VA = V × A.</div></div>
+        <div class="elec-row"><div class="elec-label">power_factor</div><div class="elec-desc">Ratio of real power to apparent power (cos φ). Resistive loads like heaters and incandescents have PF=1.0. Motor loads (AC, washer) have PF=0.85–0.95. Switching power supplies (laptops, LED drivers) have PF=0.90–0.97. A low PF means more current flows than does real work — wasteful and hard on wiring.</div></div>
+        <div class="elec-row"><div class="elec-label">efficiency_pct</div><div class="elec-desc">Combined efficiency of the inverter and the device itself. A 90% efficient device wastes 10% as heat. Your inverter adds another 5–15% loss. Example: an 1100W coffee maker at 88% efficiency actually draws 1250W from the battery. This is what's simulated as "battery load".</div></div>
+        <div class="elec-row"><div class="elec-label">duty_cycle_pct</div><div class="elec-desc">The fraction of time the heating element or motor is actually ON within its active window. A refrigerator compressor runs ~25% of the time (cycles). An AC on "eco" mode might run 70%. A dryer drum motor runs ~100% during its cycle. Setting this accurately prevents over-estimating energy use for cycling appliances.</div></div>
+        <div class="elec-row"><div class="elec-label">hrs_per_day</div><div class="elec-desc">The total daily window during which the appliance can be active. Combined with the duty cycle, it defines the total energy consumed. A refrigerator runs 24h/day but only at 25% duty = 6 equivalent full-power hours. An AC runs 6h/day at 70% duty = 4.2 equivalent full-power hours.</div></div>
+      </div>
+
+      <!-- ── SOLAR ── -->
+      <div class="doc-section" id="doc-solar" style="display:none">
+        <div class="doc-section-title">☀️ Solar Generation Engine</div>
+        <div class="doc-section-sub">Solar power follows a sine-arch curve during daylight hours. The engine scales this curve so its integral exactly matches your target daily kWh, then applies real-time weather corrections.</div>
+        <div class="formula-box">
+<span class="comment">1. Irradiance shape (normalised 0–1)</span>
+solar_curve(h) = sin(π × (h − 6) / 14)   for 6 ≤ h ≤ 20, else 0
+
+<span class="comment">2. Normalisation integral (area under the curve, in kWh-hours)</span>
+integral = Σ solar_curve(step × DT_H) × DT_H   over 2880 steps
+
+<span class="comment">3. Target daily generation</span>
+sol_target = panel_kWh × weather_factor × irradiance_factor × scenario_factor
+
+<span class="comment">4. Per-step solar power</span>
+solar_kW(step) = sol_target × solar_curve(h) / integral</div>
+
+        <div class="pillar-body" style="margin-top:12px">
+          <strong>Weather factors:</strong> Sunny=1.00, Partly cloudy=0.60, Overcast=0.25, Rainy=0.05<br><br>
+          <strong>Real-time irradiance factor</strong> (from Open-Meteo):<br>
+          <code style="font-family:var(--fm);font-size:11px;color:var(--teal)">irr_factor = 1 − (cloud_cover% / 100) × 0.92 + 0.05</code><br>
+          This means: at 0% cloud cover → 1.05× (slight atmospheric boost), at 50% cloud → 0.59×, at 100% cloud → 0.13×.<br><br>
+          <strong>Why sine arch?</strong> Real solar irradiance follows a smooth bell curve through the day, peaking near solar noon. The sine function is an excellent approximation for mid-latitude locations between 25°N and 55°N where most RVs travel.
+        </div>
+      </div>
+
+      <!-- ── BATTERY ── -->
+      <div class="doc-section" id="doc-bat" style="display:none">
+        <div class="doc-section-title">🔋 Battery Model — LiFePO4</div>
+        <div class="doc-section-sub">The simulation models a LiFePO4 (lithium iron phosphate) battery bank with temperature derating, a usable capacity floor, and step-by-step energy accounting.</div>
+        <div class="formula-box">
+<span class="comment">Usable capacity after temperature derating</span>
+temp_factor:  &lt;0°C→0.70   &lt;10°C→0.85   &lt;20°C→0.95   ≥20°C→1.00
+max_kWh = battery_capacity × 0.95 × temp_factor
+
+<span class="comment">Start state (initial charge)</span>
+kwh₀ = min(start_SOC × battery_capacity × 0.95, max_kWh)
+
+<span class="comment">Per-step integration (30-second steps, 2880/day)</span>
+kwh_new = clamp(kwh_old + (solar_kW − load_kW) × DT_H, 0, max_kWh)
+SOC% = kwh_new / max_kWh × 100
+
+<span class="comment">Autonomy (days off-grid at current draw rate)</span>
+net_draw_kWh = max(0, total_load_kWh − total_solar_kWh)
+days_off_grid = (start_SOC × usable_kWh) / net_draw_kWh</div>
+
+        <div class="pillar-body" style="margin-top:12px">
+          <strong>0.95 usable fraction:</strong> LiFePO4 chemistry is safe from 5% to 100% SOC. We leave 2.5% headroom top and bottom, giving 95% usable capacity. Never discharge to 0% — this can permanently kill cells.<br><br>
+          <strong>Temperature derating:</strong> Cold reduces lithium-ion intercalation speed. At −10°C a LiFePO4 pack may deliver only 60–70% of rated capacity. The model applies a conservative step function. Actual derating depends on cell chemistry and internal heating.<br><br>
+          <strong>2880 steps per day:</strong> One step every 30 seconds gives sub-minute resolution for catching short surge events (microwave burst, water heater cycle) that hourly models would miss.
+        </div>
+      </div>
+
+      <!-- ── SCHEDULES ── -->
+      <div class="doc-section" id="doc-sched" style="display:none">
+        <div class="doc-section-title">🕐 Load Schedules — 9 Shape Types</div>
+        <div class="doc-section-sub">Each appliance is assigned a schedule that controls when during the day it runs. The simulation evaluates the schedule function at every 30-second step to determine the duty multiplier (0–1 or higher for cycling loads).</div>
+        <table class="sched-table">
+          <thead><tr><th>Schedule</th><th>Duty multiplier</th><th>Use case</th></tr></thead>
+          <tbody>
+            <tr><td><span class="sched-name">24h</span></td><td>1.0 always</td><td>Routers, Starlink, cameras, HMI tablets — never off</td></tr>
+            <tr><td><span class="sched-name">cycle</span></td><td>3.5 × for 22 of 90 steps (≈24%); 0.06 standby</td><td>Refrigerator compressor cycling. The 3.5× spike models the compressor's high-draw on-phase vs low-draw fan standby.</td></tr>
+            <tr><td><span class="sched-name">meal</span></td><td>1.0 at 07:15, 12:30, 18:30 (8-min window each)</td><td>Electric stove, toaster, waffle maker — three mealtime bursts per day</td></tr>
+            <tr><td><span class="sched-name">burst</span></td><td>1.0 for 10 steps (~5 min) every 2.5 hours</td><td>Water heater (tank maintains temperature), garbage disposer</td></tr>
+            <tr><td><span class="sched-name">morning</span></td><td>0.6 from 06:00–09:00, else 0</td><td>Coffee machine, morning routine appliances</td></tr>
+            <tr><td><span class="sched-name">evening</span></td><td>0.92 from 18:00–23:00, else 0</td><td>TV, music system, evening entertainment</td></tr>
+            <tr><td><span class="sched-name">lights</span></td><td>0.9 from 18:00–23:00; 0.08 daytime</td><td>LED lights — on most of the evening, dim daytime pilot</td></tr>
+            <tr><td><span class="sched-name">day</span></td><td>0.70 × occupancy_factor (10:00–20:00); 0.08 idle</td><td>Air conditioner — runs when people are active during the day. Scales with number of occupants.</td></tr>
+            <tr><td><span class="sched-name">once</span></td><td>1.0 for a single block starting 03:00</td><td>Washer, dryer, air fryer — one full run per day. Duration = hrs × 120 steps.</td></tr>
+          </tbody>
+        </table>
+        <div class="formula-box" style="margin-top:14px">
+<span class="comment">Occupancy scaling (used in 'day' schedule)</span>
+occupancy_factor = 0.7 + (occupants / 12) × 0.3
+<span class="comment">  2 occupants → 0.75×   4 → 0.80×   8 → 0.90×</span></div>
+      </div>
+
+      <!-- ── WEATHER ── -->
+      <div class="doc-section" id="doc-wx" style="display:none">
+        <div class="doc-section-title">🌤 Real-Time Weather Integration</div>
+        <div class="doc-section-sub">When you grant location access, the app fetches live meteorological data and feeds it into the simulation in real time. No API key required.</div>
+        <div class="pillar-body">
+          <strong>Data source:</strong> <a href="https://open-meteo.com" style="color:var(--blue)">Open-Meteo API</a> — free, open-source, no authentication required.<br><br>
+          <strong>Variables fetched:</strong><br>
+          • temperature_2m (°C) → feeds LiFePO4 temperature derating model<br>
+          • cloud_cover (%) → converted to irradiance_factor for solar engine<br>
+          • weather_code (WMO) → mapped to weather category for alerts<br>
+          • wind_speed_10m (km/h) → displayed, future: panel cooling model<br><br>
+          <strong>Irradiance factor derivation:</strong>
+        </div>
+        <div class="formula-box">irr_factor = 1.0 − (cloud_cover_pct / 100) × 0.92 + 0.05
+
+<span class="comment">Range:</span>
+  cloud_cover=0%   → irr_factor ≈ 1.05  (clear sky, slight atmospheric boost)
+  cloud_cover=50%  → irr_factor ≈ 0.59  (partly cloudy)
+  cloud_cover=80%  → irr_factor ≈ 0.31  (overcast)
+  cloud_cover=100% → irr_factor ≈ 0.13  (full overcast)</div>
+        <div class="pillar-body" style="margin-top:10px">
+          <strong>Location lookup:</strong> Reverse geocoding via OpenStreetMap Nominatim gives your city name for display.<br><br>
+          <strong>Refresh interval:</strong> Weather data refreshes automatically every 10 minutes while the app is open.<br><br>
+          <strong>Privacy:</strong> Coordinates are sent only to Open-Meteo and Nominatim servers. No data is stored or logged by this application.
+        </div>
+      </div>
+
+      <!-- ── GRADES ── -->
+      <div class="doc-section" id="doc-grades" style="display:none">
+        <div class="doc-section-title">🏅 Grade Reference Chart</div>
+        <div class="doc-section-sub">Stability Score grades are analogous to academic grades — they give you an instant read on system health without needing to interpret the raw number.</div>
+        <table class="grade-table">
+          <thead><tr><th>Grade</th><th>Score Range</th><th>Label</th><th>Typical Conditions</th><th>Action Required</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><div class="grade-badge" style="background:rgba(48,209,88,.15);color:#30D158">S</div></td>
+              <td style="font-family:var(--fm)">9.0 – 10.0</td><td style="color:var(--green);font-weight:600">Exceptional</td>
+              <td>14+ days autonomy, 100% solar, peak &lt;1kW, battery never below 80%</td>
+              <td style="color:var(--green)">None. You're off-grid gold standard.</td>
+            </tr>
+            <tr>
+              <td><div class="grade-badge" style="background:rgba(52,199,89,.15);color:#34C759">A</div></td>
+              <td style="font-family:var(--fm)">8.0 – 8.9</td><td style="color:#34C759;font-weight:600">Excellent</td>
+              <td>10+ days, solar covers 80%+, safe peak margin, min SOC &gt;75%</td>
+              <td style="color:var(--green)">None. Minor optimisations available.</td>
+            </tr>
+            <tr>
+              <td><div class="grade-badge" style="background:rgba(90,200,245,.15);color:#5AC8F5">B</div></td>
+              <td style="font-family:var(--fm)">7.0 – 7.9</td><td style="color:var(--teal);font-weight:600">Good</td>
+              <td>7–10 days, solar covers 60–80%, moderate peak, min SOC &gt;55%</td>
+              <td style="color:var(--teal)">Consider scheduling high-draw loads during peak solar.</td>
+            </tr>
+            <tr>
+              <td><div class="grade-badge" style="background:rgba(10,132,255,.15);color:var(--blue)">C</div></td>
+              <td style="font-family:var(--fm)">6.0 – 6.9</td><td style="color:var(--blue);font-weight:600">Fair</td>
+              <td>4–7 days, solar covers 40–60%, moderate peak, min SOC &gt;40%</td>
+              <td style="color:var(--blue)">Shift high-load usage, watch forecast. Shore up if rainy days ahead.</td>
+            </tr>
+            <tr>
+              <td><div class="grade-badge" style="background:rgba(255,159,10,.15);color:var(--orange)">D</div></td>
+              <td style="font-family:var(--fm)">5.0 – 5.9</td><td style="color:var(--orange);font-weight:600">Poor</td>
+              <td>2–4 days, solar covers &lt;40%, elevated peak, min SOC dropping</td>
+              <td style="color:var(--orange)">Shed non-essential loads. Plan for shore power within 3 days.</td>
+            </tr>
+            <tr style="background:rgba(255,69,58,.05)">
+              <td><div class="grade-badge" style="background:rgba(255,69,58,.2);color:#FF453A">F</div></td>
+              <td style="font-family:var(--fm);color:var(--red)">0.0 – 4.9</td><td style="color:var(--red);font-weight:600">CRITICAL</td>
+              <td>Battery depleting fast. Solar covering &lt;30%. Inverter overload risk. Reserve violation.</td>
+              <td style="color:var(--red)"><strong>Immediate action required.</strong> Connect shore power. Disable dryer, AC, water heater.</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:16px;padding:14px;background:rgba(255,69,58,.07);border:1px solid rgba(255,69,58,.2);border-radius:var(--r12)">
+          <div style="font-weight:600;color:var(--red);margin-bottom:6px">Why the default config often shows Grade F</div>
+          <div style="font-size:12px;color:var(--l2);line-height:1.7">
+            The default configuration ships with only 2 kWh/day of solar panels — a small 400W setup. Against a typical RV load of 12–14 kWh/day, solar coverage is only ~15%. This is realistic for many RVers who haven't yet invested in large solar arrays. <strong>Try increasing "Panel output" in Settings to 6–8 kWh/day</strong> (1.2–1.6 kW of panels) to see the score jump to Grade B or above.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div><!-- /docs -->
+
+<!-- ════════════════════════════ SETTINGS ════════════════════════════ -->
+<div id="p-set" class="page">
+  <div class="sg">
+    <div class="card"><div class="clbl">Occupancy & Experience</div>
+      <div class="sr2">
+        <div><div class="sl2">Occupants</div><div class="ss2">Scales AC, water, lighting load</div></div>
+        <div class="stp"><div class="stb2" onclick="sv('occ',-1)">−</div><div class="stv" id="occ-v">{{ d.occupants }}</div><div class="stb2" onclick="sv('occ',1)">+</div></div>
+      </div>
+      <div class="sr2">
+        <div><div class="sl2">Experience</div><div class="ss2">Expert=15% efficient, New=20% wasteful</div></div>
+        <div class="seg">
+          <button class="segb {{ 'active' if d.experience=='expert' else '' }}" onclick="setEx('expert',this)">Expert</button>
+          <button class="segb {{ 'active' if d.experience=='normal' else '' }}" onclick="setEx('normal',this)">Normal</button>
+          <button class="segb {{ 'active' if d.experience=='new' else '' }}" onclick="setEx('new',this)">New</button>
+        </div>
+      </div>
+      <div class="sr2" style="border-bottom:none">
+        <div><div class="sl2">Battery capacity</div><div class="ss2" id="bat-sub">{{ d.bat_cap }} kWh LiFePO4</div></div>
+        <div class="stp"><div class="stb2" onclick="sv('bat',-5)">−</div><div class="stv" id="bat-v" style="font-size:13px">{{ d.bat_cap|int }}</div><div class="stb2" onclick="sv('bat',5)">+</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="clbl">Solar & Weather Override</div>
+      <div class="wxg">
+        <div class="wxc {{ 'active' if d.weather=='sunny' else '' }}" onclick="setWx('sunny',this)"><span class="wxci">☀️</span><div class="wxcn">Sunny</div><div class="wxcp">100%</div></div>
+        <div class="wxc {{ 'active' if d.weather=='partly' else '' }}" onclick="setWx('partly',this)"><span class="wxci">⛅</span><div class="wxcn">Partly</div><div class="wxcp">60%</div></div>
+        <div class="wxc {{ 'active' if d.weather=='overcast' else '' }}" onclick="setWx('overcast',this)"><span class="wxci">🌥</span><div class="wxcn">Overcast</div><div class="wxcp">25%</div></div>
+        <div class="wxc {{ 'active' if d.weather=='rainy' else '' }}" onclick="setWx('rainy',this)"><span class="wxci">🌧</span><div class="wxcn">Rainy</div><div class="wxcp">5%</div></div>
+      </div>
+      <div style="margin-top:16px">
+        <div class="rl"><span>Panel output</span><span id="pan-l">2.0 kWh/day</span></div>
+        <input type="range" min="0.5" max="12" step="0.5" value="2" id="pan-s" oninput="document.getElementById('pan-l').textContent=parseFloat(this.value).toFixed(1)+' kWh/day'">
+      </div>
+      <div style="margin-top:10px">
+        <div class="rl"><span>Starting SOC</span><span id="soc-sl-l">{{ d.soc_pct }}%</span></div>
+        <input type="range" min="10" max="100" value="{{ d.soc_pct }}" id="soc-s" oninput="document.getElementById('soc-sl-l').textContent=this.value+'%'">
+      </div>
+    </div>
+    <div class="card" style="grid-column:1/-1"><div class="clbl">Quick Persona</div>
+      <div class="pg">
+        <div class="pc" onclick="lPer('solo',this)"><span class="pci">🧑</span><div class="pcn">Solo Traveler</div><div class="pcd">Minimal load, max range</div></div>
+        <div class="pc" onclick="lPer('family',this)"><span class="pci">👨‍👩‍👧</span><div class="pcn">Family Trip</div><div class="pcd">High load, all appliances</div></div>
+        <div class="pc" onclick="lPer('remote',this)"><span class="pci">💻</span><div class="pcn">Remote Worker</div><div class="pcd">Electronics priority</div></div>
+        <div class="pc" onclick="lPer('fulltime',this)"><span class="pci">🏡</span><div class="pcn">Full-Time Living</div><div class="pcd">All systems active</div></div>
+      </div>
+      <button class="rb" onclick="applySet()">▶  Run Simulation with These Settings</button>
+    </div>
+  </div>
+</div><!-- /set -->
+
+</main>
+
+<!-- ════ APPLIANCE MODAL ════ -->
+<div class="mo" id="modal" onclick="cMBg(event)"><div class="mb">
+  <div class="mh"><div class="mt2" id="m-tit">ADD APPLIANCE</div><div class="mx" onclick="cM()">✕</div></div>
+  <div class="cb">
+    <div class="cc"><div class="cv col-blue" id="c-app">0 VA</div><div class="cll">Apparent</div></div>
+    <div class="cc"><div class="cv col-orange" id="c-real">0 W</div><div class="cll">Real watts</div></div>
+    <div class="cc"><div class="cv col-red" id="c-eff">0 W</div><div class="cll">Battery load</div></div>
+    <div class="cc"><div class="cv col-green" id="c-daily">0 kWh</div><div class="cll">Daily kWh</div></div>
+  </div>
+  <div class="fs" style="margin-bottom:10px">Identity</div>
+  <div class="fg2" style="margin-bottom:14px">
+    <div class="fg" style="grid-column:1/-1"><label class="fl2">Appliance name<span class="fh">Descriptive label</span></label><input class="fi" id="f-name" placeholder="e.g. Diesel heater" oninput="mCmp()"></div>
+    <div class="fg"><label class="fl2">Category</label><select class="fi" id="f-cat"><option value="high">High power (&gt;1000W)</option><option value="medium" selected>Medium (200–1000W)</option><option value="low">Low / always-on</option></select></div>
+    <div class="fg"><label class="fl2">Schedule</label><select class="fi" id="f-sc" onchange="mCmp()"><option value="24h">24h — constant</option><option value="cycle">Cycle — compressor</option><option value="meal">Meal — 3× bursts</option><option value="burst">Burst — short pulses</option><option value="morning">Morning — 6am–9am</option><option value="evening">Evening — 6pm–11pm</option><option value="lights">Lights — eve/day</option><option value="day">Day — 10am–8pm</option><option value="once">Once — single run</option></select></div>
+  </div>
+  <div class="fs" style="margin-bottom:10px">Electrical Parameters</div>
+  <div class="fg3" style="margin-bottom:14px">
+    <div class="fg"><label class="fl2">Voltage V<span class="fh">12/24/48/120/240</span></label><input type="number" class="fi" id="f-v" value="120" min="1" max="480" step="1" oninput="mCmp()"></div>
+    <div class="fg"><label class="fl2">Current A<span class="fh">Rated draw</span></label><input type="number" class="fi" id="f-a" value="1.0" min="0.01" max="200" step="0.01" oninput="mCmp()"></div>
+    <div class="fg"><label class="fl2">Power factor<span class="fh">0.7–1.0</span></label><input type="number" class="fi" id="f-pf" value="0.95" min="0.1" max="1.0" step="0.01" oninput="mCmp()"></div>
+    <div class="fg"><label class="fl2">Efficiency %<span class="fh">Device+inverter</span></label><input type="number" class="fi" id="f-ef" value="90" min="1" max="100" step="1" oninput="mCmp()"></div>
+    <div class="fg"><label class="fl2">Duty cycle %<span class="fh">On-time fraction</span></label><input type="number" class="fi" id="f-dc" value="100" min="1" max="100" step="1" oninput="mCmp()"></div>
+    <div class="fg"><label class="fl2">Active hrs/day<span class="fh">Running window</span></label><input type="number" class="fi" id="f-hr" value="4" min="0.1" max="24" step="0.25" oninput="mCmp()"></div>
+  </div>
+  <div class="fs" style="margin-bottom:10px">Appearance</div>
+  <div class="fg2">
+    <div class="fg"><label class="fl2">Icon</label>
+      <div class="ip" id="i-pick">{% for ic in ['🔌','🔥','❄️','💧','🌀','💡','📺','☕','🎵','🛁','🌬️','📡','📱','🛰️','🔋','⚙️','🏠','🚿','🌡️','🔧'] %}<div class="io {{ 'sel' if loop.first else '' }}" onclick="sIco(this,'{{ ic }}')">{{ ic }}</div>{% endfor %}</div>
+    </div>
+    <div class="fg"><label class="fl2">Color</label>
+      <div class="cp2" id="c-pick">{% for c in ['#0A84FF','#30D158','#FF9F0A','#FF453A','#BF5AF2','#FF375F','#5AC8F5','#5E5CE6','#FF6B6B','#FFD60A','#AC8E68','#636366','#5E9EFF','#34C759'] %}<div class="co {{ 'sel' if loop.first else '' }}" style="background:{{ c }}" onclick="sClr(this,'{{ c }}')"></div>{% endfor %}</div>
+    </div>
+  </div>
+  <div class="dc" id="del-c">⚠ Delete this appliance permanently?
+    <button onclick="cDel()" style="margin-left:12px;padding:4px 12px;border-radius:6px;background:var(--red);border:none;color:#fff;cursor:pointer;font-size:11px">Yes, delete</button>
+  </div>
+  <div class="mf">
+    <button class="bs" onclick="cM()">Cancel</button>
+    <button class="bd2" id="btn-del" style="display:none" onclick="showDC()">Delete</button>
+    <button class="bp2" id="btn-save" onclick="saveApp()">Add Appliance</button>
+  </div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ID=s=>document.getElementById(s);
+const IDAT={{ d|tojson }};
+const H24=Array.from({length:24},(_,i)=>i+':00');
+const AX='rgba(255,255,255,.05)',TK='rgba(255,255,255,.25)';
+const baseO={responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(28,28,30,.9)',
+    titleColor:'rgba(235,235,245,.6)',bodyColor:'#fff',borderColor:'rgba(255,255,255,.1)',
+    borderWidth:1,padding:10,cornerRadius:8}},
+  elements:{point:{radius:0,hoverRadius:4}},
+  scales:{x:{grid:{color:AX},ticks:{color:TK,font:{size:9,family:'SF Mono,Menlo,monospace'},maxTicksLimit:8,autoSkip:true},border:{display:false}},
+    y:{grid:{color:AX},ticks:{color:TK,font:{size:9,family:'SF Mono,Menlo,monospace'}},border:{display:false}}},
+  animation:{duration:500,easing:'easeInOutCubic'}};
+let CHS={};
+function mkC(id,ds,ys){
+  const c=ID(id);if(!c)return;
+  if(CHS[id])CHS[id].destroy();
+  CHS[id]=new Chart(c.getContext('2d'),{type:'line',data:{labels:H24,datasets:ds},
+    options:{...baseO,scales:{...baseO.scales,y:{...baseO.scales.y,ticks:{...baseO.scales.y.ticks,callback:ys}}}}});
+}
+function bDash(s,l,sc,n){
+  mkC('pw-c',[{data:s,borderColor:'#FF9F0A',backgroundColor:'rgba(255,159,10,.08)',fill:true,tension:.4,borderWidth:1.5},{data:l,borderColor:'#0A84FF',backgroundColor:'rgba(10,132,255,.07)',fill:true,tension:.4,borderWidth:1.5}],v=>v+'kW');
+  mkC('soc-c',[{data:sc,borderColor:'#30D158',backgroundColor:'rgba(48,209,88,.08)',fill:true,tension:.4,borderWidth:1.5}],v=>v+'%');
+  if(ID('net-c'))mkC('net-c',[{data:n,borderColor:'rgba(255,255,255,.3)',backgroundColor:n.map(v=>v>=0?'rgba(48,209,88,.35)':'rgba(255,69,58,.35)'),fill:true,tension:.3,borderWidth:1}],v=>v.toFixed(1)+'kW');
+}
+function bSim(s,l,sc){
+  mkC('sim-pw',[{data:s,borderColor:'#FF9F0A',backgroundColor:'rgba(255,159,10,.08)',fill:true,tension:.4,borderWidth:1.5},{data:l,borderColor:'#0A84FF',backgroundColor:'rgba(10,132,255,.07)',fill:true,tension:.4,borderWidth:1.5}],v=>v+'kW');
+  mkC('sim-soc',[{data:sc,borderColor:'#30D158',backgroundColor:'rgba(48,209,88,.08)',fill:true,tension:.4,borderWidth:1.5}],v=>v+'%');
+}
+
+/* ── GAUGE (0-10) ── */
+function p2xy(cx,cy,r,deg){const rad=(deg-90)*Math.PI/180;return[cx+r*Math.cos(rad),cy+r*Math.sin(rad)];}
+function arcD(cx,cy,r,s,sw){
+  if(sw<=0)return'';const w=Math.min(sw,359.99);
+  const[ax,ay]=p2xy(cx,cy,r,s);const[bx,by]=p2xy(cx,cy,r,s+w);
+  return`M${ax.toFixed(2)} ${ay.toFixed(2)} A${r} ${r} 0 ${w>180?1:0} 1 ${bx.toFixed(2)} ${by.toFixed(2)}`;
+}
+function siCol(s){return s>=9?'#30D158':s>=8?'#34C759':s>=7?'#5AC8F5':s>=6?'#0A84FF':s>=5?'#FF9F0A':'#FF453A';}
+function drawGauge(score,grade,label){
+  const cx=130,cy=130,r=82,sw=14,sd=220,ts=280; // start 220deg, sweep 280deg
+  const bg=ID('g-bg'),fi=ID('g-fill'),gn=ID('g-num'),gg=ID('g-grade');
+  if(!bg)return;
+  bg.setAttribute('d',arcD(cx,cy,r,sd,ts));bg.setAttribute('stroke','rgba(255,255,255,.07)');bg.setAttribute('stroke-width',sw);
+  const fs=(Math.min(10,Math.max(0,score))/10)*ts;
+  fi.setAttribute('d',arcD(cx,cy,r,sd,fs));fi.setAttribute('stroke',siCol(score));fi.setAttribute('stroke-width',sw);
+  if(gn){gn.textContent=score.toFixed(1);gn.setAttribute('fill',siCol(score));}
+  if(gg)gg.textContent='Grade '+grade+' — '+label;
+}
+function updPillars(p){
+  const set=(id,v,mx,c)=>{const el=ID(id+'v');if(el)el.textContent=v;const b=ID(id+'b');if(b){b.style.width=Math.round((v/mx)*100)+'%';b.style.background=c;}};
+  set('p1-',p.p1,3.5,'var(--blue)');set('p2-',p.p2,3.0,'var(--orange)');set('p3-',p.p3,2.0,'var(--green)');set('p4-',p.p4,1.5,'var(--teal)');
+}
+
+/* ── NAVIGATION ── */
+function showPage(n,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  ID('p-'+n).classList.add('active');if(btn)btn.classList.add('active');
+  if(n==='apps')loadApps();
+  if(n==='sim')setTimeout(()=>bSim(CHS['pw-c']?.data?.datasets[0]?.data||IDAT.sol_hourly,CHS['pw-c']?.data?.datasets[1]?.data||IDAT.load_hourly,CHS['soc-c']?.data?.datasets[0]?.data||IDAT.soc_hourly),80);
+}
+function docNav(btn,sec){
+  document.querySelectorAll('.doc-nav-item').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.doc-section').forEach(s=>s.style.display='none');
+  const t=ID(sec);if(t)t.style.display='block';
+}
+
+/* ── WEATHER ── */
+const WMO={0:{wx:'sunny',icon:'☀️',lbl:'Clear'},1:{wx:'sunny',icon:'🌤',lbl:'Mainly clear'},2:{wx:'partly',icon:'⛅',lbl:'Partly cloudy'},3:{wx:'overcast',icon:'☁️',lbl:'Overcast'},45:{wx:'overcast',icon:'🌫',lbl:'Foggy'},51:{wx:'rainy',icon:'🌦',lbl:'Drizzle'},61:{wx:'rainy',icon:'🌧',lbl:'Light rain'},63:{wx:'rainy',icon:'🌧',lbl:'Moderate rain'},80:{wx:'rainy',icon:'🌦',lbl:'Showers'},95:{wx:'rainy',icon:'⛈',lbl:'Thunderstorm'}};
+function wmoI(c){return WMO[c]||WMO[Math.floor(c/10)*10]||{wx:'sunny',icon:'🌤',lbl:'Mixed'};}
+let LW={temp:null,cloud:null,wind:null,wx:'sunny',irr:1.0,icon:'🌤',city:''};
+async function fetchWx(lat,lon){
+  try{
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=temperature_2m,weather_code,cloud_cover,wind_speed_10m&timezone=auto&forecast_days=1`,{signal:AbortSignal.timeout(6000)});
+    const d=await r.json();const c=d.current;
+    const i=wmoI(c.weather_code);const irr=+(1-(c.cloud_cover/100)*0.92+0.05).toFixed(2);
+    LW={temp:Math.round(c.temperature_2m),cloud:c.cloud_cover,wind:Math.round(c.wind_speed_10m),wx:i.wx,irr,icon:i.icon,lbl:i.lbl,city:LW.city};
+    updWxUI();CFG.weather=LW.wx;CFG.temperature_c=LW.temp;CFG.irradiance_factor=LW.irr;callSim();
+  }catch(e){console.warn('Wx fetch failed',e);}
+}
+async function fetchCity(lat,lon){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&zoom=10`,{signal:AbortSignal.timeout(5000),headers:{'Accept-Language':'en'}});
+    const d=await r.json();const a=d.address;
+    LW.city=(a.city||a.town||a.village||a.county||'Your Location').split(',')[0];updWxUI();
+  }catch(e){LW.city='Your Location';}
+}
+function updWxUI(){
+  const s=(id,v)=>{const e=ID(id);if(e)e.textContent=v;};
+  s('wx-ico',LW.icon);s('wx-temp',LW.temp!==null?LW.temp+'°C':'—');
+  s('wx-cloud',LW.cloud!==null?LW.cloud+'%':'—');s('wx-wind',LW.wind!==null?LW.wind+' km/h':'—');
+  s('wx-irr',LW.irr!==null?LW.irr.toFixed(2)+'×':'—');
+  s('wx-city',LW.city||'—');s('wx-upd','Live · '+(LW.lbl||''));
+  s('nav-wx-icon',LW.icon);s('nav-temp',LW.temp!==null?LW.temp+'°':'—');
+  s('nav-loc',(LW.city||'Locating').split(',')[0]);
+  s('wx-badge','● LIVE WEATHER');s('cfg-temp',(LW.temp||CFG.temperature_c)+'°C');
+}
+function initLoc(){
+  if(!navigator.geolocation){ID('wx-badge').textContent='● NO GPS';return;}
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const lat=pos.coords.latitude,lon=pos.coords.longitude;
+    await Promise.all([fetchWx(lat,lon),fetchCity(lat,lon)]);
+    setInterval(()=>fetchWx(lat,lon),600000);
+  },()=>{ID('wx-badge').textContent='● GPS DENIED';},{timeout:10000,maximumAge:300000});
+}
+
+/* ── APPLIANCES ── */
+let APPS=[],curF='all',editId=null,selIc='🔌',selCl='#0A84FF';
+async function loadApps(){const r=await fetch('/api/appliances');APPS=await r.json();renderRows();refreshStats();}
+function filterApps(c,btn){curF=c;document.querySelectorAll('.fp').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderRows();}
+function renderRows(){
+  const list=curF==='all'?APPS:curF==='custom'?APPS.filter(a=>a.is_custom):APPS.filter(a=>a.cat===curF);
+  const mx=Math.max(...APPS.map(a=>(a.effective_watts/1000)*((a.duty_cycle_pct||100)/100)*a.hrs),.001);
+  ID('tbl-rows').innerHTML=list.map(a=>{
+    const dc=(a.duty_cycle_pct||100)/100,dk=((a.effective_watts||0)/1000*dc*a.hrs).toFixed(2);
+    const bw=Math.min(100,(+dk/mx)*100).toFixed(1),crit=(a.effective_watts||0)>1500;
+    return`<div class="tr ${a.on?'on':'off'}">
+      <div class="anc"><div class="aib" style="background:${a.clr||'#0A84FF'}20">${a.icon||'🔌'}</div><div><div class="an">${a.name}</div><div class="asu">${a.cat} · ${a.sched}</div></div></div>
+      <div class="mn" style="color:var(--l2)">${a.voltage_v||'—'}</div>
+      <div class="mn" style="color:var(--l2)">${(a.current_a||0).toFixed(2)}</div>
+      <div class="mn" style="color:var(--l2)">${(a.power_factor||1).toFixed(2)}</div>
+      <div class="mn" style="color:var(--l2)">${a.efficiency_pct||'—'}</div>
+      <div class="mn" style="color:var(--orange)">${a.duty_cycle_pct||100}</div>
+      <div class="mn" style="color:${a.clr||'#0A84FF'}">${Math.round(a.effective_watts||0)}</div>
+      <div><div class="bm2"><div class="bb"><div class="bbf" style="width:${bw}%;background:${a.clr||'#0A84FF'}"></div></div><span class="bp">${dk}</span></div></div>
+      <div>${crit?'<span class="chip cr">critical</span>':a.is_custom?'<span class="chip cp">custom</span>':'<span class="chip cg2">normal</span>'}</div>
+      <div class="ra"><button class="ib" onclick="openEdit(${a.id})">✏️</button><label class="tw2"><input type="checkbox" ${a.on?'checked':''} onchange="togApp(${a.id},this.checked)"><div class="ttr"></div></label></div>
+    </div>`;
+  }).join('');
+}
+function refreshStats(){
+  const on=APPS.filter(a=>a.on);
+  const tot=on.reduce((s,a)=>{const dc=(a.duty_cycle_pct||100)/100;return s+(a.effective_watts||0)/1000*dc*a.hrs;},0);
+  const pk=Math.max(...on.map(a=>(a.effective_watts||0)/1000),0);
+  ID('as-kwh').textContent=tot.toFixed(1);ID('as-crit').textContent=on.filter(a=>(a.effective_watts||0)>1500).length;
+  ID('as-on').textContent=on.length;ID('as-pk').textContent=pk.toFixed(2);
+}
+async function togApp(id,on){
+  await fetch(`/api/appliances/${id}/toggle`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({on})});
+  const i=APPS.findIndex(a=>a.id===id);if(i>=0)APPS[i].on=on;
+  renderRows();refreshStats();callSim();showToast(on?'Appliance enabled ✓':'Appliance disabled');
+}
+function openModal(){
+  editId=null;ID('m-tit').textContent='ADD APPLIANCE';ID('btn-save').textContent='Add Appliance';
+  ID('btn-del').style.display='none';ID('del-c').classList.remove('show');resetForm();
+  ID('modal').classList.add('open');setTimeout(()=>ID('f-name').focus(),250);
+}
+function openEdit(id){
+  const a=APPS.find(x=>x.id===id);if(!a)return;
+  editId=id;ID('m-tit').textContent='EDIT APPLIANCE';ID('btn-save').textContent='Save Changes';
+  ID('btn-del').style.display='inline-block';ID('del-c').classList.remove('show');
+  ID('f-name').value=a.name;ID('f-cat').value=a.cat;ID('f-sc').value=a.sched;
+  ID('f-v').value=a.voltage_v||120;ID('f-a').value=a.current_a||1;ID('f-pf').value=a.power_factor||1;
+  ID('f-ef').value=a.efficiency_pct||90;ID('f-dc').value=a.duty_cycle_pct||100;ID('f-hr').value=a.hrs||1;
+  sIcoById(a.icon||'🔌');sClrById(a.clr||'#0A84FF');mCmp();ID('modal').classList.add('open');
+}
+function resetForm(){
+  ID('f-name').value='';ID('f-cat').value='medium';ID('f-sc').value='24h';
+  ID('f-v').value=120;ID('f-a').value=1;ID('f-pf').value=0.95;ID('f-ef').value=90;ID('f-dc').value=100;ID('f-hr').value=4;
+  selIc='🔌';selCl='#0A84FF';
+  document.querySelectorAll('.io').forEach((el,i)=>el.classList.toggle('sel',i===0));
+  document.querySelectorAll('.co').forEach((el,i)=>el.classList.toggle('sel',i===0));mCmp();
+}
+function cM(){ID('modal').classList.remove('open');}
+function cMBg(e){if(e.target===ID('modal'))cM();}
+function sIco(el,ic){selIc=ic;document.querySelectorAll('.io').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');}
+function sIcoById(ic){selIc=ic;document.querySelectorAll('.io').forEach(el=>el.classList.toggle('sel',el.textContent.trim()===ic));}
+function sClr(el,c){selCl=c;document.querySelectorAll('.co').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');}
+function sClrById(c){selCl=c;document.querySelectorAll('.co').forEach(el=>el.classList.toggle('sel',el.style.background===c));}
+function mCmp(){
+  const v=+ID('f-v').value||0,a=+ID('f-a').value||0,pf=+ID('f-pf').value||1;
+  const ef=+ID('f-ef').value||100,dc=+ID('f-dc').value||100,hr=+ID('f-hr').value||0;
+  const ap=v*a,re=ap*pf,eff=re/(ef/100),dy=eff/1000*(dc/100)*hr;
+  ID('c-app').textContent=ap.toFixed(0)+' VA';ID('c-real').textContent=re.toFixed(1)+' W';
+  ID('c-eff').textContent=eff.toFixed(1)+' W';ID('c-daily').textContent=dy.toFixed(3)+' kWh';
+}
+async function saveApp(){
+  const name=ID('f-name').value.trim();if(!name){showToast('Name is required','error');return;}
+  const p={name,cat:ID('f-cat').value,sched:ID('f-sc').value,voltage_v:+ID('f-v').value,
+    current_a:+ID('f-a').value,power_factor:+ID('f-pf').value,efficiency_pct:+ID('f-ef').value,
+    duty_cycle_pct:+ID('f-dc').value,hrs:+ID('f-hr').value,icon:selIc,clr:selCl};
+  let url='/api/appliances',method='POST';
+  if(editId!==null){url='/api/appliances/'+editId;method='PUT';}
+  const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+  if(r.ok){await loadApps();cM();callSim();showToast(editId!==null?'Appliance updated ✓':'Appliance added ✓');}
+  else showToast('Save failed','error');
+}
+function showDC(){ID('del-c').classList.add('show');}
+async function cDel(){
+  if(editId===null)return;
+  const r=await fetch('/api/appliances/'+editId,{method:'DELETE'});
+  if(r.ok){await loadApps();cM();callSim();showToast('Appliance removed');}
+}
+
+/* ── SIMULATION ── */
+const CFG={occupants:{{ d.occupants }},experience:'{{ d.experience }}',
+  battery_capacity_kwh:{{ d.bat_cap }},starting_soc:{{ d.soc_pct/100 }},
+  solar_output_kwh:2.0,weather:'{{ d.weather }}',scenario:'expected',
+  load_factor:1.0,temperature_c:{{ d.temperature_c }},irradiance_factor:1.0};
+async function callSim(ov={}){
+  const r=await fetch('/api/simulate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...CFG,...ov})});
+  const d=await r.json();applyResult(d);
+}
+function applyResult(d){
+  const sc=d.soc_pct>50?'var(--green)':d.soc_pct>20?'var(--orange)':'var(--red)';
+  // nav
+  const ns=ID('nav-soc');if(ns){ns.textContent=d.soc_pct+'%';ns.style.color=sc;}
+  // battery
+  const bf=ID('bat-fill');if(bf){bf.style.width=d.soc_pct+'%';bf.style.background=d.soc_pct>50?'var(--green)':d.soc_pct>20?'var(--orange)':'var(--red)';}
+  const set=(id,v)=>{const e=ID(id);if(e)e.textContent=v;};
+  set('soc-kwh',d.soc_kwh);set('soc-pct-txt',d.soc_pct+'%');set('tte-txt','⏱ '+d.tte);
+  set('sol-now',d.sol_now+' kW');set('ld-now',d.ld_now+' kW');
+  const nn=ID('net-now');if(nn){nn.textContent=(d.net_now>=0?'+':'')+d.net_now+' kW';nn.style.color=d.net_now>=0?'var(--green)':'var(--red)';}
+  // right panel
+  const dv=ID('days-v');if(dv){dv.textContent=d.days_off_grid>99?'∞':d.days_off_grid;dv.style.color=d.days_off_grid>3?'var(--green)':d.days_off_grid>1?'var(--orange)':'var(--red)';}
+  set('lkwh',d.total_load_kwh);set('cov-v',d.sol_coverage_pct+'%');
+  set('bt-f',Math.round(d.bat_temp_factor*100)+'%');set('min-soc',d.min_soc+'%');
+  set('pk-kw',d.peak_load_kw+' kW');set('bat-d',d.bat_draw_kwh+' kWh');
+  // gauge
+  drawGauge(d.si_score,d.si_grade,d.si_label);
+  updPillars(d.si_pillars);
+  // metrics
+  set('m-sol',d.sol_now);set('m-ld',d.ld_now);
+  const mn=ID('m-net');if(mn){mn.textContent=(d.net_now>=0?'+':'')+d.net_now;mn.style.color=d.net_now>=0?'var(--green)':'var(--red)';}
+  set('m-net-l',d.net_now>=0?'Charging':'Drawing');
+  const msi=ID('m-si');if(msi){msi.textContent=d.si_score;msi.style.color=siCol(d.si_score);}
+  // alerts
+  const aw=ID('alerts-w');if(aw)aw.innerHTML=d.alerts.map(a=>`<div class="ai ${a.sev}"><div class="ad"></div><span>${a.msg}</span></div>`).join('');
+  // sim stats
+  set('ss-load',d.total_load_kwh);set('ss-sol',d.total_sol_kwh);set('ss-bat',d.bat_draw_kwh);
+  set('ss-days',d.days_off_grid>99?'∞':d.days_off_grid);
+  const ssi=ID('ss-si');if(ssi){ssi.textContent=d.si_score;ssi.style.color=siCol(d.si_score);}
+  set('ss-cov',d.sol_coverage_pct+'%');
+  // breakdown
+  const bb=ID('bd-body');if(bb)bb.innerHTML=d.breakdown.slice(0,8).map(a=>`<tr>
+    <td>${a.icon} ${a.name}</td>
+    <td style="text-align:right;font-family:var(--fm);font-size:11px;color:${a.clr}">${Math.round(a.effective_watts)}</td>
+    <td style="text-align:right;font-family:var(--fm);font-size:11px">${a.daily_kwh}</td>
+    <td><div class="bdr"><div class="bdb"><div class="bdf" style="width:${Math.min(a.share_pct,100)}%;background:${a.clr}"></div></div><span style="font-size:9px;color:var(--l3);min-width:28px;text-align:right;font-family:var(--fm)">${a.share_pct}%</span></div></td>
+  </tr>`).join('');
+  // charts
+  bDash(d.sol_hourly,d.load_hourly,d.soc_hourly,d.net_hourly);
+  if(CHS['sim-pw'])bSim(d.sol_hourly,d.load_hourly,d.soc_hourly);
+  set('st-ms','Sim: '+d.ms+'ms');
+  set('cfg-sc',d.scenario);set('cfg-wx',d.weather);set('cfg-occ',d.occupants);
+}
+function simSc(sc,btn){CFG.scenario=sc;document.querySelectorAll('.stb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');callSim();}
+function wiUpd(){
+  const si=+ID('wi-s').value,lf=+ID('wi-l').value;
+  ID('wi-sl').textContent=si+'%';ID('wi-ll').textContent=lf+'%';
+  callSim({solar_output_kwh:CFG.solar_output_kwh*(si/100),load_factor:lf/100});
+}
+function sv(k,d){
+  if(k==='occ'){CFG.occupants=Math.max(1,Math.min(8,CFG.occupants+d));ID('occ-v').textContent=CFG.occupants;}
+  if(k==='bat'){CFG.battery_capacity_kwh=Math.max(10,Math.min(200,CFG.battery_capacity_kwh+d));
+    ID('bat-v').textContent=CFG.battery_capacity_kwh;ID('bat-sub').textContent=CFG.battery_capacity_kwh+' kWh LiFePO4';}
+}
+function setEx(e,btn){CFG.experience=e;document.querySelectorAll('.segb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+function setWx(w,el){CFG.weather=w;document.querySelectorAll('.wxc').forEach(e=>e.classList.remove('active'));el.classList.add('active');}
+function lPer(p,c){
+  document.querySelectorAll('.pc').forEach(x=>x.classList.remove('active'));c.classList.add('active');
+  const P={solo:{occupants:1,experience:'expert'},family:{occupants:4,experience:'normal'},remote:{occupants:1,experience:'expert'},fulltime:{occupants:2,experience:'normal'}}[p];
+  CFG.occupants=P.occupants;CFG.experience=P.experience;ID('occ-v').textContent=P.occupants;
+}
+function applySet(){
+  CFG.starting_soc=+ID('soc-s').value/100;CFG.solar_output_kwh=+ID('pan-s').value;
+  callSim(CFG);showPage('dash',document.querySelector('.pill'));
+}
+function showToast(msg,type='success'){
+  const el=ID('toast');el.textContent=msg;el.className='toast '+type;
+  requestAnimationFrame(()=>el.classList.add('show'));setTimeout(()=>el.classList.remove('show'),2600);
+}
+function tick(){const n=new Date();const c=ID('st-clk');if(c)c.textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+':'+String(n.getSeconds()).padStart(2,'0');}
+document.addEventListener('DOMContentLoaded',async()=>{
+  const d=IDAT;
+  const bf=ID('bat-fill');if(bf)bf.style.background=d.soc_pct>50?'var(--green)':d.soc_pct>20?'var(--orange)':'var(--red)';
+  setTimeout(()=>drawGauge(d.si_score,d.si_grade,d.si_label),80);
+  updPillars(d.si_pillars);
+  bDash(d.sol_hourly,d.load_hourly,d.soc_hourly,d.net_hourly);
+  await loadApps();
+  tick();setInterval(tick,1000);
+  setTimeout(initLoc,400);mCmp();
+});
+</script></body></html>
