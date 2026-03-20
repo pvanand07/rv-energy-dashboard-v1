@@ -198,6 +198,7 @@ main{max-width:1440px;margin:0 auto;padding:20px}
 .bb{flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
 .bbf{height:100%;border-radius:2px}
 .bp{font-size:9px;color:var(--l3);min-width:26px;text-align:right;font-family:var(--fm)}
+.stag{font-size:8px;color:var(--teal);opacity:.75;font-family:var(--fm);letter-spacing:.3px;margin-left:2px}
 
 /* ═══ MODAL ═══ */
 .mo{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;
@@ -851,8 +852,8 @@ days_off_grid = (start_SOC × usable_kWh) / net_draw_kWh</div>
           <tbody>
             <tr><td><span class="sched-name">24h</span></td><td>1.0 always</td><td>Routers, Starlink, cameras, HMI tablets — never off</td></tr>
             <tr><td><span class="sched-name">cycle</span></td><td>3.5 × for 22 of 90 steps (≈24%); 0.06 standby</td><td>Refrigerator compressor cycling. The 3.5× spike models the compressor's high-draw on-phase vs low-draw fan standby.</td></tr>
-            <tr><td><span class="sched-name">meal</span></td><td>1.0 at 07:15, 12:30, 18:30 (8-min window each)</td><td>Electric stove, toaster, waffle maker — three mealtime bursts per day</td></tr>
-            <tr><td><span class="sched-name">burst</span></td><td>1.0 for 10 steps (~5 min) every 2.5 hours</td><td>Water heater (tank maintains temperature), garbage disposer</td></tr>
+            <tr><td><span class="sched-name">meal</span></td><td>1.0 at 07:15, 12:30, 18:30 (8-min window each)</td><td>Electric stove, microwave, garbage disposer — three mealtime bursts per day</td></tr>
+            <tr><td><span class="sched-name">burst</span></td><td>1.0 for 10 steps (~5 min) every 2.5 hours</td><td>Water heater (tank maintains temperature)</td></tr>
             <tr><td><span class="sched-name">morning</span></td><td>0.6 from 06:00–09:00, else 0</td><td>Coffee machine, morning routine appliances</td></tr>
             <tr><td><span class="sched-name">evening</span></td><td>0.92 from 18:00–23:00, else 0</td><td>TV, music system, evening entertainment</td></tr>
             <tr><td><span class="sched-name">lights</span></td><td>0.9 from 18:00–23:00; 0.08 daytime</td><td>LED lights — on most of the evening, dim daytime pilot</td></tr>
@@ -955,7 +956,7 @@ occupancy_factor = 0.7 + (occupants / 12) × 0.3
   <div class="sg">
     <div class="card"><div class="clbl">Occupancy & Experience</div>
       <div class="sr2">
-        <div><div class="sl2">Occupants</div><div class="ss2">Scales AC, water, lighting load</div></div>
+        <div><div class="sl2">Occupants</div><div class="ss2">Scales AC load only (day schedule)</div></div>
         <div class="stp"><div class="stb2" onclick="sv('occ',-1)">−</div><div class="stv" id="occ-v">{{ d.occupants }}</div><div class="stb2" onclick="sv('occ',1)">+</div></div>
       </div>
       <div class="sr2">
@@ -1145,7 +1146,7 @@ function initLoc(){
 }
 
 /* ── APPLIANCES ── */
-let APPS=[],curF='all',editId=null,selIc='🔌',selCl='#0A84FF';
+let APPS=[],SIM_KWH={},curF='all',editId=null,selIc='🔌',selCl='#0A84FF';
 async function loadApps(){const r=await fetch('/api/appliances');APPS=await r.json();renderRows();refreshStats();}
 function filterApps(c,btn){curF=c;document.querySelectorAll('.fp').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderRows();}
 // Returns effective active hours/day for a schedule type — mirrors app_duty() averages in simulation.py
@@ -1163,11 +1164,16 @@ function schedEffHours(sched,hrs){
     default:       return hrs;
   }
 }
+// Returns simulated kWh/day when available, JS estimate otherwise
+function appKwh(a){
+  if(SIM_KWH[a.name]!==undefined) return SIM_KWH[a.name];
+  return((a.effective_watts||0)/1000)*((a.duty_cycle_pct||100)/100)*schedEffHours(a.sched,a.hrs);
+}
 function renderRows(){
   const list=curF==='all'?APPS:curF==='custom'?APPS.filter(a=>a.is_custom):APPS.filter(a=>a.cat===curF);
-  const mx=Math.max(...APPS.map(a=>(a.effective_watts/1000)*((a.duty_cycle_pct||100)/100)*schedEffHours(a.sched,a.hrs)),.001);
+  const mx=Math.max(...APPS.map(appKwh),.001);
   ID('tbl-rows').innerHTML=list.map(a=>{
-    const dc=(a.duty_cycle_pct||100)/100,dk=((a.effective_watts||0)/1000*dc*schedEffHours(a.sched,a.hrs)).toFixed(2);
+    const dk=appKwh(a).toFixed(2),fromSim=SIM_KWH[a.name]!==undefined;
     const bw=Math.min(100,(+dk/mx)*100).toFixed(1),crit=(a.effective_watts||0)>1000;
     return`<div class="tr ${a.on?'on':'off'}">
       <div class="anc"><div class="aib" style="background:${a.clr||'#0A84FF'}20">${a.icon||'🔌'}</div><div><div class="an">${a.name}</div><div class="asu">${a.cat} · ${a.sched}</div></div></div>
@@ -1177,7 +1183,7 @@ function renderRows(){
       <div class="mn" style="color:var(--l2)">${a.efficiency_pct||'—'}</div>
       <div class="mn" style="color:var(--orange)">${a.duty_cycle_pct||100}</div>
       <div class="mn" style="color:${a.clr||'#0A84FF'}">${Math.round(a.effective_watts||0)}</div>
-      <div><div class="bm2"><div class="bb"><div class="bbf" style="width:${bw}%;background:${a.clr||'#0A84FF'}"></div></div><span class="bp">${dk}</span></div></div>
+      <div><div class="bm2"><div class="bb"><div class="bbf" style="width:${bw}%;background:${a.clr||'#0A84FF'}"></div></div><span class="bp">${dk}</span>${fromSim?'<span class="stag">sim</span>':''}</div></div>
       <div>${crit?'<span class="chip cr">critical</span>':a.is_custom?'<span class="chip cp">custom</span>':'<span class="chip cg2">normal</span>'}</div>
       <div class="ra"><button class="ib" onclick="openEdit(${a.id})">✏️</button><label class="tw2"><input type="checkbox" ${a.on?'checked':''} onchange="togApp(${a.id},this.checked)"><div class="ttr"></div></label></div>
     </div>`;
@@ -1185,7 +1191,7 @@ function renderRows(){
 }
 function refreshStats(){
   const on=APPS.filter(a=>a.on);
-  const tot=on.reduce((s,a)=>{const dc=(a.duty_cycle_pct||100)/100;return s+(a.effective_watts||0)/1000*dc*schedEffHours(a.sched,a.hrs);},0);
+  const tot=on.reduce((s,a)=>s+appKwh(a),0);
   const pk=Math.max(...on.map(a=>(a.effective_watts||0)/1000),0);
   ID('as-kwh').textContent=tot.toFixed(1);ID('as-crit').textContent=on.filter(a=>(a.effective_watts||0)>1000).length;
   ID('as-on').textContent=on.length;ID('as-pk').textContent=pk.toFixed(2);
@@ -1293,6 +1299,9 @@ function applyResult(d){
     <td style="text-align:right;font-family:var(--fm);font-size:11px">${a.daily_kwh}</td>
     <td><div class="bdr"><div class="bdb"><div class="bdf" style="width:${Math.min(a.share_pct,100)}%;background:${a.clr}"></div></div><span style="font-size:9px;color:var(--l3);min-width:28px;text-align:right;font-family:var(--fm)">${a.share_pct}%</span></div></td>
   </tr>`).join('');
+  // merge simulated kWh into appliance tab rows
+  SIM_KWH={};d.breakdown.forEach(a=>{SIM_KWH[a.name]=parseFloat(a.daily_kwh);});
+  renderRows();refreshStats();
   // charts
   bDash(d.sol_hourly,d.load_hourly,d.soc_hourly,d.net_hourly);
   if(CHS['sim-pw'])bSim(d.sol_hourly,d.load_hourly,d.soc_hourly);

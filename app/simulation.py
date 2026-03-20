@@ -396,7 +396,7 @@ def run_simulation(cfg: dict) -> dict:
         tips.append({"gain": "+2.1d",     "msg": "Reduce AC duty cycle to 50% — major autonomy gain"})
     tips.append(    {"gain": "+0.4 kWh",  "msg": "Schedule high-draw loads 10am–2pm (peak solar)"})
     if users > 2:
-        tips.append({"gain": f"+{round((users-2)*0.3,1)} kWh/d", "msg": "Fewer occupants reduces load proportionally"})
+        tips.append({"gain": f"+{round((users-2)*0.3,1)} kWh/d", "msg": "Fewer occupants reduces AC load (occupancy scaling on day schedule)"})
     if temp_c < 10:
         tips.append({"gain": "+8% cap",  "msg": "Insulate battery bay — recover cold-derating loss"})
     if cov < 0.5:

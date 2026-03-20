@@ -209,7 +209,7 @@ def _default_appliances() -> list[dict]:
         ("Microwave",           "medium",  120, 10.00, 0.96,  90, 100, 0.17, True,  "meal",    "📡","#FF9F0A"),
         ("Air fryer",           "medium",  120, 12.50, 0.98,  95, 100, 0.33, False, "once",    "🍟","#FF6B6B"),
         ("Coffee machine",      "medium",  120,  9.17, 0.97,  88, 100, 0.25, True,  "morning", "☕","#AC8E68"),
-        ("Garbage disposer",    "medium",  120,  4.17, 0.90,  85, 100, 0.01, False, "burst",   "🗑","#636366"),
+        ("Garbage disposer",    "medium",  120,  4.17, 0.90,  85, 100, 0.01, False, "meal",    "🗑","#636366"),
         ("TV",                   "low",    120,  1.00, 0.92,  82, 100, 4.00, True,  "evening", "📺","#5E9EFF"),
         ("Music system",         "low",    120,  0.63, 0.88,  80, 100, 3.00, True,  "evening", "🎵","#BF5AF2"),
         ("Starlink",             "low",     48,  1.25, 0.94,  88, 100, 24.0, True,  "24h",     "🛰️","#30D158"),
